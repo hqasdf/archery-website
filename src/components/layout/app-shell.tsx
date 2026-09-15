@@ -29,7 +29,7 @@ export function AppShell({
             </span>
             <span>
               <span className={styles.brandName}>ARC TRACK</span>
-              <span className={styles.brandCaption}>Archery performance</span>
+              <span className={styles.brandCaption}>Archery Performance Tracker</span>
             </span>
           </Link>
           <Navigation />
