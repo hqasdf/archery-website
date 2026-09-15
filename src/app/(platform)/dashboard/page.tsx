@@ -7,7 +7,12 @@ import styles from "@/styles/pages.module.css";
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  await requireUser();
+  const bypassAuth = process.env.DEV_BYPASS_AUTH === "true";
+
+  if (!bypassAuth) {
+    await requireUser();
+  }
+
   return (
     <>
       <div className={styles.intro}>

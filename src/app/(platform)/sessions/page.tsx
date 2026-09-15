@@ -7,8 +7,11 @@ import styles from "@/styles/pages.module.css";
 export const metadata: Metadata = { title: "Sessions" };
 
 export default async function SessionsPage() {
+const bypassAuth = process.env.DEV_BYPASS_AUTH === "true";
+
+if (!bypassAuth) {
   await requireUser();
-  return (
+}  return (
     <>
       <div className={styles.intro}>
         <p className={styles.eyebrow}>Your training journal</p>
