@@ -1,0 +1,141 @@
+.shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+.skip {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 100;
+  background: var(--color-surface);
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+}
+.skip:focus {
+  top: 12px;
+}
+.header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.headerInner {
+  max-width: 1200px;
+  min-height: 90px;
+  padding: 16px 40px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+}
+.brandMark {
+  color: var(--color-primary);
+  display: flex;
+  padding: 9px;
+  background: var(--color-peach);
+  border-radius: 50%;
+}
+.brandName {
+  font-weight: 700;
+  font-size: 1.17rem;
+  letter-spacing: 0.06em;
+}
+.brandCaption {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.61rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 17px;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+.navLink:hover {
+  color: var(--color-text);
+  background: var(--color-soft);
+}
+.navLink[aria-current="page"] {
+  background: var(--color-peach-light);
+  color: var(--color-primary);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+.preview {
+  margin-left: auto;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 5px 11px;
+  color: var(--color-muted);
+}
+.main {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 40px 64px;
+  flex: 1;
+}
+.footer {
+  max-width: 1120px;
+  width: calc(100% - 80px);
+  margin: 0 auto;
+  padding: 22px 0 26px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.footer span:last-child {
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .headerInner {
+    padding: 16px 20px 12px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .brand {
+    order: 0;
+  }
+  .preview {
+    order: 1;
+  }
+  .navigation {
+    order: 2;
+    width: 100%;
+  }
+  .navLink {
+    flex: 1;
+  }
+  .main {
+    padding: 30px 20px 40px;
+  }
+  .footer {
+    width: calc(100% - 40px);
+    flex-direction: column;
+    gap: 6px;
+  }
+}
