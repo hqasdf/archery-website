@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Arc Track
 
 The foundation of an archery performance platform for recurve and compound archers.
@@ -74,7 +73,3 @@ An unavailable localhost page usually means the development server is stopped. A
 Finish connecting Supabase and verifying real account/email flows, then discuss the identity/profile relationship before writing database migrations. Follow `docs/project-state.md` for agreed requirements and `docs/decisions.md` for architectural decisions.
 
 Reference: https://nextjs.org/docs/app/getting-started/installation
-=======
-# archery-website
-A web platform for archers to record scores, capture grouping images, understand performance patterns, and prepare for competition.
->>>>>>> 1c02e5c8297f9f01d8d1692ab2b465733bd21149
