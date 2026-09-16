@@ -7,6 +7,17 @@ export type AuthState = {
 export const INITIAL_AUTH_STATE: AuthState = { status: "idle", message: "" };
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 128;
+export type VerificationMode = "email" | "recovery";
+
+export function validateVerificationInput(form: FormData, requireCode = true) {
+  const input = validateAuthInput("forgot-password", form);
+  if (!input.ok) return input;
+  const token = textField(form, "code").trim();
+  if (requireCode && !/^[0-9]{6}$/.test(token)) {
+    return { ok: false as const, message: "Enter the six-digit code from your email." };
+  }
+  return { ok: true as const, email: input.email, token };
+}
 
 function textField(form: FormData, name: string): string {
   const value = form.get(name);

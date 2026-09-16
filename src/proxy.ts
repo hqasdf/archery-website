@@ -46,6 +46,8 @@ export const config = {
     "/sign-in",
     "/sign-up",
     "/forgot-password",
+    "/verify-email",
+    "/verify-recovery",
     "/update-password",
     "/auth/:path*",
   ],

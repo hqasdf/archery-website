@@ -4,7 +4,33 @@ import {
   callbackDestination,
   parseAuthConfig,
 } from "../src/lib/auth/config.ts";
-import { validateAuthInput } from "../src/features/auth/validation.ts";
+import { validateAuthInput, validateVerificationInput } from "../src/features/auth/validation.ts";
+
+test("verification preserves leading zeros and accepts surrounding pasted whitespace", () => {
+  const data = new FormData();
+  data.set("email", " archer@example.com ");
+  data.set("code", " 012345 ");
+  assert.deepEqual(validateVerificationInput(data), { ok: true, email: "archer@example.com", token: "012345" });
+});
+
+test("verification rejects malformed codes and file fields", () => {
+  for (const code of ["", "12345", "1234567", "12 345", "abcdef", "１２３４５６", new Blob(["123456"])]) {
+    const data = new FormData();
+    data.set("email", "archer@example.com");
+    data.set("code", code);
+    assert.equal(validateVerificationInput(data).ok, false);
+  }
+});
+
+test("requesting another code needs a valid email but no code", () => {
+  const data = new FormData();
+  data.set("email", "archer@example.com");
+  assert.equal(validateVerificationInput(data, false).ok, true);
+  data.set("email", "invalid");
+  assert.equal(validateVerificationInput(data, false).ok, false);
+  data.set("code", "012345");
+  assert.equal(validateVerificationInput(data).ok, false);
+});
 
 const config = {
   url: "https://example.supabase.co",

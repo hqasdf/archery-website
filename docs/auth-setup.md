@@ -32,9 +32,19 @@ In Supabase Authentication settings:
 4. Add these exact allowed redirect URLs:
    - `http://127.0.0.1:3000/auth/callback`
    - `http://127.0.0.1:3000/auth/callback?next=/update-password`
-5. Keep the default confirmation/recovery templates using `{{ .ConfirmationURL }}`. Custom templates that ignore the requested redirect URL will not complete the app's callback.
+5. Set Email OTP length to **6 digits** and Email OTP Expiration to **300 seconds**. Supabase enforces expiry from issuance, not from opening the email or refreshing the form.
+6. Replace both **Confirm signup** and **Reset password** email bodies with a code-only template:
 
-Use `127.0.0.1` consistently. It is a different cookie host from `localhost`. Open confirmation/reset emails in the same browser where you requested them: the PKCE verifier is stored in that browser's cookie. For another port, update APP_URL and both Supabase redirects to match.
+```html
+<h2>Your Arc Track verification code</h2>
+<p>{{ .Token }}</p>
+<p>This code expires in 5 minutes. Enter it on the website.</p>
+<p>If you did not request this email, ignore it.</p>
+```
+
+Do not include a confirmation link. Keep Confirm Email enabled. Supabase generates and verifies all codes. The app never generates its own OTP.
+
+Use `127.0.0.1` consistently. It is a different cookie host from `localhost`. Read email on any device, then enter the code on the website. The registration and recovery flows lead to their code-entry pages; normal sign-in has no separate verification link or code step. Code entry does not require the requesting browser cookies. The local loopback website itself is reachable only on the development computer. For another port, update APP_URL and both Supabase redirects to match.
 
 Supabase's default email service sends only to project-team addresses and has a low rate limit (documented as two emails per hour when checked). Begin with your own project-account email. Before inviting normal users, configure custom SMTP. Do not turn off email confirmation to work around delivery restrictions.
 
@@ -52,12 +62,13 @@ Open http://127.0.0.1:3000/sign-in. If the form is still disabled, check all thr
 
 - Signed out: direct visits to `/dashboard`, `/sessions`, and `/update-password` must return to sign-in.
 - Register: use your own email and a unique password of 12–128 characters. The app should ask you to check email.
-- Confirm: open the latest email in the same browser; the callback should create the session and open Dashboard.
+- Confirm: enter your email and the six-digit code on the registration verification page; expect Dashboard and normal session cookies. Repeat in a fresh browser context without the originating cookies.
 - Sign out: expect the sign-in page and a signed-out message. Revisiting a protected page or using Back must not grant access.
 - Sign in: correct credentials open Dashboard; incorrect credentials show a generic error without exposing account information.
 - Reload a protected page: expect the session to persist while valid.
-- Reset: request a reset, follow the link in the same browser, choose a new password, then sign out and sign in with it.
-- Invalid/expired/reused callback: expect an explanatory sign-in message, never an authenticated page.
+- Reset: request recovery, enter the six-digit code on the next page, choose a new password, then sign out and sign in with it. Test that signup codes do not satisfy recovery verification.
+- Verify an unused code works after two minutes and before five minutes, but fails after five minutes. Check incorrect/reused codes, resend limits, and that refresh cannot extend expiry.
+- Invalid/expired/reused legacy callback: expect an explanatory sign-in message, never an authenticated page.
 - Network failure: expect an error and no authenticated access. Retry when connectivity returns.
 - Before profile data is added: test two separate accounts/browser contexts and ensure their identities never cross. Once tables exist, separately test row-level policies; page protection alone is not database isolation.
 
@@ -65,11 +76,11 @@ Open http://127.0.0.1:3000/sign-in. If the form is still disabled, check all thr
 
 `AuthForm` -> server action -> input validation -> Supabase Auth -> HttpOnly session cookies -> server identity check -> protected page.
 
-- `src/features/auth/actions.ts`: registration, login, recovery, password update, logout.
+- `src/features/auth/actions.ts`: registration, login, code verification/resend, recovery, password update, logout.
 - `src/lib/supabase/server.ts`: creates a fresh cookie-aware SDK client per request.
 - `src/proxy.ts`: refreshes tokens and prevents shared caching of auth responses.
 - `src/lib/auth/session.server.ts`: asks Supabase to verify the user. Both the layout and each current protected page call it; future data operations must do so too.
-- `src/app/auth/callback/route.ts`: exchanges the temporary email code for a session; only fixed internal destinations are accepted.
+- `src/app/auth/callback/route.ts`: retained legacy PKCE callback. New email templates send codes verified through Server Actions instead. Only fixed internal destinations are accepted.
 - `src/lib/auth/config.ts`: rejects incomplete configuration and accidental secret keys.
 
 No browser Supabase client is used yet, so session cookies are HttpOnly. Adding browser-side Supabase later requires deliberately revisiting that design. Sign-out applies to the current browser, not all devices. Password update requires a verified signed-in identity; a recovery email is one route to obtaining it.
@@ -82,3 +93,11 @@ No custom tables/migrations or row-level security policies have been created in 
 - https://supabase.com/docs/guides/auth/passwords
 - https://supabase.com/docs/guides/auth/redirect-urls
 - https://supabase.com/docs/guides/auth/auth-smtp
+
+## Current status
+
+Supabase connection verified; signup enabled and confirmation required. No development bypass remains. Hosted six-digit/300-second settings and code templates await user confirmation. Real account, email delivery, code expiry, signed-in persistence, recovery, and two-account tests remain pending.
+
+## Signup email carry-forward
+
+Signup remembers the submitted email in an HttpOnly, SameSite=Lax UI-context cookie for up to one hour, cleared after successful email-code verification. This is not a session or OTP and grants no access; Supabase still verifies the email/code and enforces the separate 300-second code expiry. The verification page shows only a code input and the recipient email. It has no Already confirmed link. Without signup context, it returns to registration. Read the email on any device, then enter the code in the signup browser; this convenience step does not require the old PKCE verifier. Hosted code-only email templates and expiry still need confirmation and live testing.

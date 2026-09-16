@@ -24,7 +24,7 @@ const actions = {
 const labels = {
   "sign-in": "Sign in",
   "sign-up": "Create account",
-  "forgot-password": "Send reset link",
+  "forgot-password": "Send recovery code",
   "update-password": "Update password",
 };
 

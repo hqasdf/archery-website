@@ -3,19 +3,24 @@ import type { ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { getAuthConfig } from "@/lib/auth/config";
 import { AuthForm } from "./auth-form";
-import type { AuthMode } from "../validation";
+import type { AuthMode, VerificationMode } from "../validation";
+import { VerificationForm } from "./verification-form";
 import styles from "./auth.module.css";
 
 export function AuthPanel({
   title,
   description,
   mode,
+  verificationMode,
+  verificationEmail,
   notice,
   children,
 }: {
   title: string;
   description: string;
   mode: AuthMode;
+  verificationMode?: VerificationMode;
+  verificationEmail?: string;
   notice?: string;
   children?: ReactNode;
 }) {
@@ -44,7 +49,11 @@ export function AuthPanel({
             {notice}
           </p>
         )}
-        <AuthForm mode={mode} configured={configured} />
+        {verificationMode ? (
+          <VerificationForm mode={verificationMode} configured={configured} initialEmail={verificationEmail} />
+        ) : (
+          <AuthForm mode={mode} configured={configured} />
+        )}
         <div className={styles.links}>{children}</div>
       </section>
       <p className={styles.footnote}>Recurve & compound · One end at a time.</p>

@@ -10,11 +10,11 @@ The supplied Archery_Performance_Platform_Plan_with_NEA_Weather.docx defines the
 
 Phase 1, increment 1 foundation is implemented. Its build, lint, type checks, desktop/mobile layout, navigation, and automated accessibility checks passed.
 
-Current: increment 2, managed authentication. Implemented email/password registration, sign-in, password recovery/update, same-browser PKCE callback, local sign-out, HttpOnly cookie handling, token refresh, and server identity checks for Dashboard/Sessions/update-password. Credentials are not configured yet; access fails closed and forms show a setup message. The user requested help creating the Supabase project. The local configuration template and docs/auth-setup.md are ready. Real signup/email/recovery/refresh/sign-out and two-account isolation tests remain pending project setup; do not call this increment fully verified until those pass.
+Current: increment 2, managed authentication. Supabase connection verified; email signup enabled and confirmation required. The development bypass is removed. Six-digit registration/recovery code-entry pages use Supabase verifyOtp and the existing HttpOnly cookie client. Required hosted expiry is 300 seconds; provider settings/templates still await user confirmation. Normal sign-in remains email/password with no separate code-verification link. The legacy callback remains, but new templates must send codes only. Live email, expiry, cross-browser verification, refresh, sign-out, recovery and two-account testing remain pending. Do not call authentication fully verified until those pass.
 
 No custom database schema, profile persistence, session persistence, score-entry workflow, images, weather, analytics, goals, or AI exist yet. Nothing has been deployed. Session empty states remain unconnected to data. ARC TRACK is the working label from the original design.
 
-## Verification on 2026-09-15
+## Historical foundation verification on 2026-09-15
 
 - Production build and TypeScript compilation passed; ESLint passed with zero warnings.
 - Eight native unit tests passed: auth input, configuration validation, and callback destination safety.
@@ -64,3 +64,7 @@ Weather outages must not block scoring. Forecasts and observations remain separa
 ## Next task
 
 Help the user complete Supabase setup, enter project URL/publishable key locally, configure redirect URLs, and test real account flows. Then discuss ArcherProfile fields and its one-to-one identity relationship before migrations. Do not skip verification and proceed to scoring.
+
+## Signup email carry-forward
+
+Signup remembers the submitted email in an HttpOnly, SameSite=Lax UI-context cookie for up to one hour, cleared after successful email-code verification. This is not a session or OTP and grants no access; Supabase still verifies the email/code and enforces the separate 300-second code expiry. The verification page shows only a code input and the recipient email. It has no Already confirmed link. Without signup context, it returns to registration. Read the email on any device, then enter the code in the signup browser; this convenience step does not require the old PKCE verifier. Hosted code-only email templates and expiry still need confirmation and live testing.

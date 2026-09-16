@@ -22,7 +22,7 @@ Use Next.js, React, React DOM, and Supabase Auth/SSR helpers at runtime. Use Typ
 
 ## Honest preview
 
-Navigation and round explanations work. Authentication code is implemented but its live flows await Supabase connection and verification. Saving and performance analysis do not exist yet. Auth forms are disabled if configuration is missing; protected pages never fall back to public access. Bind local servers to loopback and disable search indexing. Row-level privacy must be implemented and tested with the eventual tables.
+Navigation and round explanations work. Authentication code is implemented but its live flows await live account verification; the Supabase connection is configured. Saving and performance analysis do not exist yet. Auth forms are disabled if configuration is missing; protected pages never fall back to public access. Bind local servers to loopback and disable search indexing. Row-level privacy must be implemented and tested with the eventual tables.
 
 ## Future data boundary
 
@@ -31,3 +31,13 @@ Supabase Auth owns account identities. The future ArcherProfile will have a one-
 ## Authentication increment
 
 Email/password with confirmation and recovery. All Supabase calls are server-side; session cookies are HttpOnly, SameSite=Lax, and Secure when APP_URL uses HTTPS. Proxy refreshes cookies, while pages/actions verify identity independently. Callback destinations are allowlisted and the canonical APP_URL controls configured redirects. Missing configuration returns a relative sign-in redirect. Do not trust getSession user objects as authorisation. No service-role/secret key is used. Sign-out is local to the current browser. Real email and two-account tests remain pending.
+
+## Email codes and real development accounts
+
+User approved six-digit email codes with five-minute (300-second) provider-enforced expiry for signup confirmation and recovery only. Normal sign-in remains email/password, with no verification navigation link. Code entry follows registration or recovery requests. Separate Server Actions fix the verification purpose and destination; forms cannot select arbitrary OTP types or redirects. Supabase generates/verifies codes and enforces sending/verification limits. Codes and passwords are not stored in application storage or URLs. The verifying browser receives the existing session cookies without an originating PKCE verifier requirement. The legacy callback is retained, but new templates contain codes only. Hosted settings/templates and real-account flows must be verified.
+
+There is no development bypass. Test accounts are ordinary Supabase users without special application privileges. No profile or data tables are part of this increment.
+
+## Signup email carry-forward
+
+Signup remembers the submitted email in an HttpOnly, SameSite=Lax UI-context cookie for up to one hour, cleared after successful email-code verification. This is not a session or OTP and grants no access; Supabase still verifies the email/code and enforces the separate 300-second code expiry. The verification page shows only a code input and the recipient email. It has no Already confirmed link. Without signup context, it returns to registration. Read the email on any device, then enter the code in the signup browser; this convenience step does not require the old PKCE verifier. Hosted code-only email templates and expiry still need confirmation and live testing.

@@ -9,11 +9,7 @@ export default async function PlatformLayout({
 }: {
   children: ReactNode;
 }) {
-  const bypassAuth = process.env.DEV_BYPASS_AUTH === "true";
-
-  if (!bypassAuth) {
-    await requireUser();
-  }
+  await requireUser();
 
   return <AppShell authenticated>{children}</AppShell>;
 }

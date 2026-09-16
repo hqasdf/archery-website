@@ -2,7 +2,7 @@
 
 The foundation of an archery performance platform for recurve and compound archers.
 
-The app contains a responsive shell, Dashboard and Sessions pages, agreed round presets, and Supabase email/password authentication code. Account creation, sign-in, confirmation, recovery, and sign-out need your Supabase connection and live verification. Score collection, profile persistence, and session saving are not implemented yet.
+The app contains a responsive shell, Dashboard and Sessions pages, agreed round presets, and Supabase email/password authentication code. Account creation, sign-in, confirmation, recovery, and sign-out use the configured Supabase connection but still need live account verification. Registration confirmation and recovery use six-digit codes; configure Supabase expiry to 300 seconds. Score collection, profile persistence, and session saving are not implemented yet.
 
 Start with [the guided Supabase setup](docs/auth-setup.md). Until connection settings are present, authentication forms stay disabled and protected pages redirect to sign-in. This is intentional.
 
@@ -15,7 +15,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Open http://127.0.0.1:3000/sign-in. Use this address consistently with APP_URL and the Ssigning ase redirect settings; do not switch between localhost and 127.0.0.1 during an email confirmation flow. The development server binds only to this computer. Stop it with Ctrl+C. Changes to source files appear automatically while it runs. Use `npm` instead of `npm.cmd` outside Windows.
+Open http://127.0.0.1:3000/sign-in. Use this address consistently with APP_URL and the Supabase URL settings. Localhost and 127.0.0.1 have separate session cookies. Email codes can be read on any device. The development server binds only to this computer. Stop it with Ctrl+C. Changes to source files appear automatically while it runs. Use `npm` instead of `npm.cmd` outside Windows.
 
 ## Checks
 

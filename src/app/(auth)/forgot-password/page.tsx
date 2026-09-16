@@ -8,7 +8,7 @@ export default function ForgotPasswordPage() {
     <AuthPanel
       mode="forgot-password"
       title="Let’s get you back in."
-      description="Enter your email address to request a password reset link."
+      description="Enter your email address to request a six-digit recovery code."
     >
       <Link href="/sign-in">Back to sign in</Link>
     </AuthPanel>
