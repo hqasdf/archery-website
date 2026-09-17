@@ -1,6 +1,6 @@
 # Project state
 
-Updated: 2026-09-15
+Updated: 2026-09-17
 
 ## Sources and collaboration
 
@@ -10,9 +10,19 @@ The supplied Archery_Performance_Platform_Plan_with_NEA_Weather.docx defines the
 
 Phase 1, increment 1 foundation is implemented. Its build, lint, type checks, desktop/mobile layout, navigation, and automated accessibility checks passed.
 
-Current: increment 2, managed authentication. Supabase connection verified; email signup enabled and confirmation required. The development bypass is removed. Six-digit registration/recovery code-entry pages use Supabase verifyOtp and the existing HttpOnly cookie client. Required hosted expiry is 300 seconds; provider settings/templates still await user confirmation. Normal sign-in remains email/password with no separate code-verification link. The legacy callback remains, but new templates must send codes only. Live email, expiry, cross-browser verification, refresh, sign-out, recovery and two-account testing remain pending. Do not call authentication fully verified until those pass.
+Stage 1 authentication is the working baseline confirmed by the user. Stage 2 adds the minimal private profile foundation. Existing authentication logic and configuration were preserved; the proxy matcher only adds `/profile/:path*`. Post-migration live authentication regression testing remains pending user interaction and must not be inferred from unit tests.
 
-No custom database schema, profile persistence, session persistence, score-entry workflow, images, weather, analytics, goals, or AI exist yet. Nothing has been deployed. Session empty states remain unconnected to data. ARC TRACK is the working label from the original design.
+The `public.profiles` table and `/profile` page are implemented. Profiles contain an optional display name and timestamps; email is displayed read-only from Auth. Session persistence, score entry, equipment, images, weather, analytics, goals, and AI remain unimplemented. The database migration is applied to the existing Supabase project; the website has not been deployed. Session empty states remain unconnected to data.
+
+## Stage 2 verification on 2026-09-17
+
+- Migration `20260917143411_create_profiles.sql` applied through the existing Supabase connector. No CLI or dependencies installed.
+- Immediate transaction test confirmed a new Auth row creates an empty profile; rolled back afterward. This checks the trigger, not the real signup API/email flow. The connector could not impersonate `supabase_auth_admin`; no permissions were changed to bypass that limitation.
+- Existing account backfill verified: one Auth user, one profile, zero missing profiles.
+- `supabase/tests/profile-ownership.sql` passed against the live database within a rolled-back transaction: own-profile SELECT/save/clear, anonymous denial, cross-user SELECT/UPDATE denial, column restrictions, client INSERT/DELETE denial, name-length constraint, uniqueness, and cascading deletion.
+- Browser direct navigation to `/profile` while signed out redirected to `/sign-in`.
+- Lint, typecheck, all 15 unit tests, and production build passed.
+- Pending: real signup and OTP regression immediately requested from the user after migration; signed-in profile save and refresh; sign-in/sign-out and password-recovery regressions. No fresh signup was observed at the final database check. Do not mark Stage 2 fully verified until these pass.
 
 ## Historical foundation verification on 2026-09-15
 
@@ -41,7 +51,7 @@ No custom database schema, profile persistence, session persistence, score-entry
 
 ## Architecture
 
-Implemented: Next.js App Router, TypeScript, CSS Modules, global design tokens, ESLint, Supabase Auth SDK/SSR helpers. Node 22.18+ is required for native TypeScript policy tests. PostgreSQL tables and private Storage are not provisioned. No ORM or global state library has been added.
+Implemented: Next.js App Router, TypeScript, CSS Modules, global design tokens, ESLint, Supabase Auth SDK/SSR helpers, and the RLS-protected profiles table. Node 22.18+ is required for native TypeScript policy tests. Private Storage is not provisioned. No ORM or global state library has been added.
 
 ## Roadmap
 
@@ -55,7 +65,7 @@ Weather outages must not block scoring. Forecasts and observations remain separa
 
 ## Open decisions at relevant stages
 
-- Authentication: finish Supabase project/URL setup with the user and run live account tests. Email/password chosen for this increment. Custom SMTP before non-team users; provider limits apply during development.
+- Authentication: finish the post-migration live regression checklist with the user. Preserve the existing email/password and six-digit OTP setup.
 - Scoring: X/tie-breaking and target-face rules, bounds for custom rounds, mixed arrangements, multiple rounds per session.
 - Context: fatigue scale, duration fields, historical correction policy, privacy-preserving local draft cleanup.
 - Analytics: sample sizes and exact metric definitions.
@@ -63,7 +73,7 @@ Weather outages must not block scoring. Forecasts and observations remain separa
 
 ## Next task
 
-Help the user complete Supabase setup, enter project URL/publishable key locally, configure redirect URLs, and test real account flows. Then discuss ArcherProfile fields and its one-to-one identity relationship before migrations. Do not skip verification and proceed to scoring.
+Complete the pending live Stage 2 checks, then report for review. Do not proceed to further data tables or scoring without approval.
 
 ## Signup email carry-forward
 

@@ -1,0 +1,42 @@
+.form {
+  max-width: 560px;
+  padding: clamp(20px, 4vw, 32px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.legend { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+.field { margin: 20px 0; }
+.field label { display: block; margin-bottom: 8px; font-weight: 600; }
+.field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 16px;
+}
+.field input[readonly] { background: var(--color-soft); }
+.field input:focus-visible, .save:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.hint { margin-top: 8px; color: var(--color-muted); font-size: 0.85rem; }
+.save {
+  min-height: 48px;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-surface);
+  background: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.save:hover { background: var(--color-primary-hover); }
+.form fieldset:disabled .save { opacity: 0.65; cursor: wait; }
+.success, .error { margin-top: 20px; padding: 14px; border-radius: var(--radius-sm); overflow-wrap: anywhere; }
+.success { background: var(--color-peach-light); }
+.error { color: #8b2920; background: #fff0ed; }

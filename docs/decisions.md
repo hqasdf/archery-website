@@ -22,11 +22,11 @@ Use Next.js, React, React DOM, and Supabase Auth/SSR helpers at runtime. Use Typ
 
 ## Honest preview
 
-Navigation and round explanations work. Authentication code is implemented but its live flows await live account verification; the Supabase connection is configured. Saving and performance analysis do not exist yet. Auth forms are disabled if configuration is missing; protected pages never fall back to public access. Bind local servers to loopback and disable search indexing. Row-level privacy must be implemented and tested with the eventual tables.
+Navigation and round explanations work. Stage 1 authentication is the user-confirmed working baseline. Profile saving is implemented; scoring and performance analysis remain deferred. Auth forms are disabled if configuration is missing; protected pages never fall back to public access. Bind local servers to loopback and disable search indexing. Record new live regression results separately from the baseline.
 
 ## Future data boundary
 
-Supabase Auth owns account identities. The future ArcherProfile will have a one-to-one relationship with identity; fields and cardinalities must be discussed before migrations. Future data operations must verify identity, ownership, and input; row-level security must defend private records. No custom tables or policies have been created yet.
+Supabase Auth owns account identities. `public.profiles.id` is both the primary key and a foreign key to `auth.users.id`, with cascading deletion. Future data operations must verify identity, ownership, and input; row-level security must defend private records.
 
 ## Authentication increment
 
@@ -36,7 +36,17 @@ Email/password with confirmation and recovery. All Supabase calls are server-sid
 
 User approved six-digit email codes with five-minute (300-second) provider-enforced expiry for signup confirmation and recovery only. Normal sign-in remains email/password, with no verification navigation link. Code entry follows registration or recovery requests. Separate Server Actions fix the verification purpose and destination; forms cannot select arbitrary OTP types or redirects. Supabase generates/verifies codes and enforces sending/verification limits. Codes and passwords are not stored in application storage or URLs. The verifying browser receives the existing session cookies without an originating PKCE verifier requirement. The legacy callback is retained, but new templates contain codes only. Hosted settings/templates and real-account flows must be verified.
 
-There is no development bypass. Test accounts are ordinary Supabase users without special application privileges. No profile or data tables are part of this increment.
+There is no development bypass. Test accounts are ordinary Supabase users without special application privileges. Stage 2 adds only the profile table described below.
+
+## Stage 2 minimal private profile
+
+Profile fields are `id`, nullable `display_name`, `created_at`, and `updated_at`. Trim display names, store blank as null, and allow up to 80 Unicode characters. The server derives ownership from `requireUser()` rather than submitted IDs. Email stays in Auth and is read-only on this page. No onboarding gate or additional profile fields are introduced.
+
+An AFTER INSERT trigger on `auth.users` inserts the empty profile with `ON CONFLICT DO NOTHING`; the migration backfills existing users. Its SECURITY DEFINER function has an empty search path, fully qualified table references, and no client EXECUTE grants. Trigger failure can block signup, so real signup regression is required after migration. Creating an empty profile does not create a session or grant access to an unconfirmed account.
+
+RLS allows authenticated users to SELECT and UPDATE only their own row using `auth.uid()`. Grants permit UPDATE only on `display_name`; clients cannot INSERT or DELETE. A separate trigger maintains `updated_at`. The platform layout, profile page, and save action reuse the existing identity checks. The sole proxy change includes `/profile/:path*` for existing cookie refresh handling.
+
+The approved migration was applied through the existing Supabase connector and saved under its returned version, `20260917143411`; no CLI installation was needed. Ownership regression SQL uses temporary Auth fixtures and rolls the transaction back. Any future rollback must be explicitly approved because dropping the profiles table would delete saved names; remove the Auth trigger before its function/table. No rollback was performed.
 
 ## Signup email carry-forward
 

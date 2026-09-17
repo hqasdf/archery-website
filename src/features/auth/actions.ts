@@ -78,7 +78,6 @@ export async function signUp(
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
-      options: { emailRedirectTo: `${config.appUrl}/auth/callback` },
     });
     recordEmailRequest("signup", error);
     if (error?.status === 429) return emailRequestFailure(error);
@@ -122,9 +121,7 @@ export async function requestPasswordReset(
   if (!config) return setupRequired;
   try {
     const supabase = await createAuthClient({ writable: true });
-    const { error } = await supabase.auth.resetPasswordForEmail(input.email, {
-      redirectTo: `${config.appUrl}/auth/callback?next=/update-password`,
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(input.email);
     recordEmailRequest("recovery", error);
     if (error) return emailRequestFailure(error);
   } catch {
