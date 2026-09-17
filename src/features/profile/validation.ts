@@ -1,24 +1,66 @@
+export const DIVISIONS = ["Recurve", "Compound", "Barebow", "Other"] as const;
+export const SHOOTING_HANDS = ["Left", "Right"] as const;
+export const EXPERIENCE_LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
+
+export type ProfileDetails = {
+  display_name: string | null;
+  club_or_team: string | null;
+  division: string | null;
+  shooting_hand: string | null;
+  experience_level: string | null;
+  bio: string | null;
+};
+
 export type ProfileState = {
   status: "idle" | "error" | "success";
   message: string;
-  displayName?: string | null;
+  profile?: ProfileDetails;
 };
 
 export const INITIAL_PROFILE_STATE: ProfileState = { status: "idle", message: "" };
 export const DISPLAY_NAME_MAX_LENGTH = 80;
 
+export function profileDisplayName(name: string | null | undefined) {
+  return name?.trim() || "Archer";
+}
+
 export function validateProfileInput(form: FormData) {
-  const raw = form.get("display_name");
-  if (typeof raw !== "string") {
-    return { ok: false as const, message: "Enter a display name, or leave it blank." };
+  const profile: ProfileDetails = {
+    display_name: null, club_or_team: null, division: null,
+    shooting_hand: null, experience_level: null, bio: null,
+  };
+  const textFields = [
+    ["display_name", "display name", DISPLAY_NAME_MAX_LENGTH],
+    ["club_or_team", "club / team", 120],
+    ["bio", "bio", 500],
+  ] as const;
+  for (const [field, label, limit] of textFields) {
+    const raw = form.get(field);
+    if (typeof raw !== "string") {
+      return { ok: false as const, message: `Enter your ${label}, or leave it blank.` };
+    }
+    // Bio SQL btrim uses exactly String.trim's whitespace set. Keep internal newlines.
+    const value = raw.trim();
+    if (value.includes("\0") || /[\uD800-\uDFFF]/u.test(value)) {
+      return { ok: false as const, message: `Your ${label} contains an unsupported character.` };
+    }
+    // Match PostgreSQL char_length, including supplementary Unicode characters.
+    if (Array.from(value).length > limit) {
+      return { ok: false as const, message: `Use no more than ${limit} characters for your ${label}.` };
+    }
+    profile[field] = value || null;
   }
-  const name = raw.trim();
-  // PostgreSQL char_length counts Unicode code points, not UTF-16 code units.
-  if (Array.from(name).length > DISPLAY_NAME_MAX_LENGTH) {
-    return { ok: false as const, message: "Use no more than 80 characters for your display name." };
+  const choices = [
+    ["division", "division", DIVISIONS],
+    ["shooting_hand", "shooting hand", SHOOTING_HANDS],
+    ["experience_level", "experience level", EXPERIENCE_LEVELS],
+  ] as const;
+  for (const [field, label, options] of choices) {
+    const raw = form.get(field);
+    if (typeof raw !== "string" || (raw !== "" && !(options as readonly string[]).includes(raw))) {
+      return { ok: false as const, message: `Choose a valid ${label}, or select Not specified.` };
+    }
+    profile[field] = raw || null;
   }
-  if (name.includes("\0")) {
-    return { ok: false as const, message: "Your display name contains an unsupported character." };
-  }
-  return { ok: true as const, displayName: name || null };
+  return { ok: true as const, profile };
 }

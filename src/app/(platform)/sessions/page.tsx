@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session.server";
+import { readOwnDisplayName } from "@/features/profile/read.server";
 import { RoundPresetsPanel } from "@/features/sessions/components/round-presets-panel";
 import { Icon } from "@/components/ui/icon";
 import styles from "@/styles/pages.module.css";
@@ -8,12 +9,13 @@ export const metadata: Metadata = { title: "Sessions" };
 
 export default async function SessionsPage() {
   await requireUser();
+  const displayName = await readOwnDisplayName();
 
   return (
     <>
       <div className={styles.intro}>
         <p className={styles.eyebrow}>Your training journal</p>
-        <h1>Every session has a place.</h1>
+        <h1 style={{ overflowWrap: "anywhere" }}>Your sessions, {displayName}</h1>
         <p>Training days, competition days, and the rounds in between.</p>
       </div>
       <div className={styles.sessionsGrid}>

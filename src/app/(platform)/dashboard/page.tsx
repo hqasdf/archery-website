@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session.server";
+import { readOwnDisplayName } from "@/features/profile/read.server";
 import { ActionLink } from "@/components/ui/action-link";
 import { Icon } from "@/components/ui/icon";
 import styles from "@/styles/pages.module.css";
@@ -8,12 +9,13 @@ export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   await requireUser();
+  const displayName = await readOwnDisplayName();
 
   return (
     <>
       <div className={styles.intro}>
         <p className={styles.eyebrow}>Your practice</p>
-        <h1>Your training, at a glance.</h1>
+        <h1 style={{ overflowWrap: "anywhere" }}>Welcome back, {displayName}</h1>
         <p>Improving slowly. A clearer picture over time.</p>
       </div>
       <section className={styles.hero} aria-labelledby="start-heading">

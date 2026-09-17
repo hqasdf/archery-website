@@ -130,6 +130,105 @@ begin
 end;
 $$;
 
+
+-- Stage 2.1: all optional details use the same owner policies and grants.
+reset role;
+select set_config('request.jwt.claim.sub', current_setting('stage2.user_a'), true);
+select set_config('request.jwt.claims',
+  json_build_object('sub', current_setting('stage2.user_a'), 'role', 'authenticated')::text, true);
+set local role authenticated;
+do $$
+declare
+  affected integer;
+  whitespace text := U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF';
+  c text;
+begin
+  update public.profiles set club_or_team='Stage 2.1 Club', division='Barebow',
+    shooting_hand='Left', experience_level='Advanced', bio=E'First line\n\n  Second line\r\nThird line'
+    where id=auth.uid();
+  if not exists (select 1 from public.profiles where id=auth.uid()
+      and club_or_team='Stage 2.1 Club' and division='Barebow' and shooting_hand='Left'
+      and experience_level='Advanced' and bio=E'First line\n\n  Second line\r\nThird line') then
+    raise exception 'FAIL: new fields did not persist';
+  end if;
+  update public.profiles set club_or_team='Unauthorized', division='Other',
+    shooting_hand='Right', experience_level='Beginner', bio='Unauthorized'
+    where id=current_setting('stage2.user_b')::uuid;
+  get diagnostics affected = row_count;
+  if affected <> 0 then raise exception 'FAIL: cross-user detail update allowed'; end if;
+  if exists (select bio from public.profiles where id=current_setting('stage2.user_b')::uuid) then
+    raise exception 'FAIL: cross-user details readable';
+  end if;
+  begin
+    update public.profiles set experience_level='Competitive' where id=auth.uid();
+    raise exception 'FAIL: Competitive accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    update public.profiles set division='Invalid' where id=auth.uid();
+    raise exception 'FAIL: invalid division accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    update public.profiles set shooting_hand='Invalid' where id=auth.uid();
+    raise exception 'FAIL: invalid hand accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    update public.profiles set club_or_team=repeat('a',121) where id=auth.uid();
+    raise exception 'FAIL: club length accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    update public.profiles set bio=repeat('a',501) where id=auth.uid();
+    raise exception 'FAIL: bio length accepted';
+  exception when check_violation then null;
+  end;
+  update public.profiles set bio=repeat('🏹',500) where id=auth.uid();
+  foreach c in array string_to_array(whitespace, null) loop
+    update public.profiles set bio=btrim(c || E'First\nSecond' || c, whitespace) where id=auth.uid();
+    if not exists (select 1 from public.profiles where id=auth.uid() and bio=E'First\nSecond') then
+      raise exception 'FAIL: normalized multiline bio rejected or altered';
+    end if;
+    begin
+      update public.profiles set bio=c || 'Text' where id=auth.uid();
+      raise exception 'FAIL: leading whitespace accepted';
+    exception when check_violation then null;
+    end;
+    begin
+      update public.profiles set bio='Text' || c where id=auth.uid();
+      raise exception 'FAIL: trailing whitespace accepted';
+    exception when check_violation then null;
+    end;
+    update public.profiles set bio=nullif(btrim(c,whitespace),'') where id=auth.uid();
+  end loop;
+  update public.profiles set club_or_team=null, division=null, shooting_hand=null,
+    experience_level=null, bio=null where id=auth.uid();
+  if not exists (select 1 from public.profiles where id=auth.uid()
+      and club_or_team is null and division is null and shooting_hand is null
+      and experience_level is null and bio is null) then
+    raise exception 'FAIL: fields did not clear';
+  end if;
+end;
+$$;
+reset role;
+select set_config('request.jwt.claim.sub', '', true);
+select set_config('request.jwt.claims', '{}', true);
+set local role anon;
+do $$
+begin
+  begin
+    perform club_or_team, division, shooting_hand, experience_level, bio from public.profiles;
+    raise exception 'FAIL: anonymous details readable';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.profiles set bio='Anonymous';
+    raise exception 'FAIL: anonymous bio update allowed';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
 reset role;
 delete from auth.users where id=current_setting('stage2.user_a')::uuid;
 do $$
@@ -140,6 +239,5 @@ begin
 end;
 $$;
 
-select 'PASS: creation, uniqueness, own read/save/clear, timestamps, cross-user SELECT/UPDATE denial, immutable ownership, INSERT/DELETE denial, length constraint, anonymous denial, cascade' as result;
+select 'PASS: creation, uniqueness, own read/save/clear of all fields, timestamps, cross-user SELECT/UPDATE denial, immutable ownership, INSERT/DELETE denial, length/choice/Unicode bio constraints, anonymous denial, cascade' as result;
 rollback;
-

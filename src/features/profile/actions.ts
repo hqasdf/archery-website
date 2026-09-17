@@ -14,15 +14,17 @@ export async function saveProfile(_previous: ProfileState, form: FormData): Prom
     const supabase = await createAuthClient({ writable: true });
     const { data, error } = await supabase
       .from("profiles")
-      .update({ display_name: input.displayName })
+      .update(input.profile)
       .eq("id", user.id)
-      .select("id, display_name")
+      .select("display_name, club_or_team, division, shooting_hand, experience_level, bio")
       .maybeSingle();
     if (error || !data) {
       return { status: "error", message: "Your profile could not be saved. Please try again." };
     }
     revalidatePath("/profile");
-    return { status: "success", message: "Profile saved.", displayName: data.display_name };
+    revalidatePath("/dashboard");
+    revalidatePath("/sessions");
+    return { status: "success", message: "Profile saved.", profile: data };
   } catch {
     return { status: "error", message: "Profile saving is temporarily unavailable. Please try again." };
   }
