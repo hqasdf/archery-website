@@ -16,7 +16,7 @@ export async function saveProfile(_previous: ProfileState, form: FormData): Prom
       .from("profiles")
       .update(input.profile)
       .eq("id", user.id)
-      .select("display_name, club_or_team, division, shooting_hand, experience_level, bio")
+      .select("display_name, club_or_team, division, shooting_hand, experience_level")
       .maybeSingle();
     if (error || !data) {
       return { status: "error", message: "Your profile could not be saved. Please try again." };

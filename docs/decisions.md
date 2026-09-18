@@ -48,6 +48,28 @@ RLS allows authenticated users to SELECT and UPDATE only their own row using `au
 
 The approved migration was applied through the existing Supabase connector and saved under its returned version, `20260917143411`; no CLI installation was needed. Ownership regression SQL uses temporary Auth fixtures and rolls the transaction back. Any future rollback must be explicitly approved because dropping the profiles table would delete saved names; remove the Auth trigger before its function/table. No rollback was performed.
 
-## Signup email carry-forward
+## Stage 2.1 archer details and personalization
 
-Signup remembers the submitted email in an HttpOnly, SameSite=Lax UI-context cookie for up to one hour, cleared after successful email-code verification. This is not a session or OTP and grants no access; Supabase still verifies the email/code and enforces the separate 300-second code expiry. The verification page shows only a code input and the recipient email. It has no Already confirmed link. Without signup context, it returns to registration. Read the email on any device, then enter the code in the signup browser; this convenience step does not require the old PKCE verifier. Hosted code-only email templates and expiry still need confirmation and live testing.
+Migration `20260917150016_extend_profile_details` adds nullable text columns `club_or_team` (120 characters), `division` (Recurve/Compound/Barebow/Other), `shooting_hand` (Left/Right), `experience_level` (Beginner/Intermediate/Advanced), and `bio` (500 characters). Competitive is not an experience level. Barebow/Other are descriptive profile options only; scoring remains Recurve/Compound. Lengths count Unicode code points.
+
+The server trims text and stores blank values as null. Bio preserves internal line breaks/indentation. Its database constraint uses the explicit ECMAScript String.trim whitespace set, including tabs, line terminators, and Unicode spaces; tests check exact agreement with JavaScript. The database accepts normalized nonempty bio or null and rejects untrimmed direct writes. No normalizing database trigger is added.
+
+Existing ownership RLS policies and both triggers remain unchanged. Only column-level UPDATE privileges for the five new columns are added; clients still cannot insert/delete profiles or change ownership/timestamps. The profile action derives identity from the existing requireUser helper and only saves explicitly validated fields.
+
+The Account section keeps authenticated email read-only and links Change password to the existing `/update-password` route. Auth implementations/settings and proxy are untouched. No credentials or Auth metadata copies are introduced.
+
+Dashboard and Sessions use a server-only reader of the authenticated user's own display_name. Blank/missing names or profile-read failures use Archer. No cross-request name cache is introduced. Saving revalidates Profile, Dashboard, and Sessions. Profile fields remain private; no public biography or new session-creation flow is implied.
+
+## Stage 2.2 profile cards and email change
+
+Migration `20260918020718_remove_profile_bio` dropped the `bio` column after all current profile loading, saving, validation, form, and tests stopped using it. The one existing non-null bio value was permanently removed with user approval. The other profile columns and existing ownership RLS policies remain unchanged.
+
+The normal Profile view displays separate Account and Archer Profile cards. Archer details are text until Edit profile is selected; Cancel discards unsaved values and a successful save returns to the card. Dashboard and Sessions still read `profiles.display_name`, falling back to Archer. At desktop width, both cards occupy the left column; the right column is empty without a placeholder. At narrow widths, the cards stack. The shared navigation uses only a small mobile spacing adjustment so all three links fit at 320px.
+
+Account email remains exclusively in Supabase Auth. An authenticated Server Action validates a different new email and calls `supabase.auth.updateUser({ email }, { emailRedirectTo: appUrl + '/auth/callback' })` through the existing cookie client. A successful request is explicitly pending, never presented as an immediate email change. Secure Email Change was observed enabled: the existing template sends confirmation links to the old and new addresses, and the existing PKCE callback is reused without edits. Change password continues to link to `/update-password`.
+
+Observed configuration discrepancy: the hosted email OTP expiry was 3600 seconds on 2026-09-17 despite a prior 300-second requirement. No Auth setting was changed in Stage 2.2; review it separately before claiming five-minute expiry.
+
+## Signup email carry-forward (existing behavior)
+
+Signup remembers the submitted email in an HttpOnly, SameSite=Lax UI-context cookie for up to one hour, cleared after successful email-code verification. This is not a session or OTP and grants no access; Supabase still verifies the email/code and enforces its hosted expiry setting. The verification page shows only a code input and the recipient email. It has no Already confirmed link. Without signup context, it returns to registration. Read the email on any device, then enter the code in the signup browser; this convenience step does not require the old PKCE verifier. The earlier five-minute expiry requirement differs from the observed 3600-second hosted setting and needs separate review.

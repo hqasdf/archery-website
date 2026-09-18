@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session.server";
 import { createAuthClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/features/profile/components/profile-form";
+import { AccountCard } from "@/features/profile/components/account-card";
+import profileStyles from "@/features/profile/components/profile.module.css";
 import type { ProfileDetails } from "@/features/profile/validation";
 import styles from "@/styles/pages.module.css";
 
@@ -13,7 +15,7 @@ export default async function ProfilePage() {
   try {
     const supabase = await createAuthClient();
     const { data, error } = await supabase.from("profiles")
-      .select("display_name, club_or_team, division, shooting_hand, experience_level, bio")
+      .select("display_name, club_or_team, division, shooting_hand, experience_level")
       .eq("id", user.id).maybeSingle();
     if (!error) profile = data;
   } catch {
@@ -27,9 +29,14 @@ export default async function ProfilePage() {
         <h1>Your profile.</h1>
         <p>A little about you and your archery.</p>
       </div>
-      {profile ? <ProfileForm email={user.email ?? ""} profile={profile} /> : (
-        <p role="alert">Your profile could not be loaded. Please refresh the page to try again.</p>
-      )}
+      <div className={profileStyles.layout}>
+        <div className={profileStyles.cards}>
+          <AccountCard email={user.email ?? ""} pendingEmail={user.new_email ?? null} />
+          {profile ? <ProfileForm profile={profile} /> : (
+            <p role="alert">Your profile could not be loaded. Please refresh the page to try again.</p>
+          )}
+        </div>
+      </div>
     </>
   );
 }

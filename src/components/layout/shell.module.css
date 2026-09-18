@@ -126,9 +126,13 @@
   .navigation {
     order: 2;
     width: 100%;
+    gap: 0;
   }
   .navLink {
     flex: 1;
+    gap: 5px;
+    padding: 10px 8px;
+    font-size: 0.85rem;
   }
   .main {
     padding: 30px 20px 40px;

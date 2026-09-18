@@ -1,47 +1,49 @@
-.form {
-  max-width: 560px;
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); }
+.cards { display: grid; gap: 24px; min-width: 0; }
+.card {
+  min-width: 0;
   padding: clamp(20px, 4vw, 32px);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
 }
+.card h2 { font-size: 1.2rem; margin-bottom: 20px; }
+.displayName { font-size: 1.5rem; font-weight: 600; margin-bottom: 24px; }
+.details { display: grid; gap: 20px; margin: 0 0 24px; }
+.details dt { color: var(--color-muted); font-size: 0.85rem; margin-bottom: 6px; }
+.details dd { margin: 0; }
 .form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-.form .archer { margin-top: 32px; }
-.legend { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+.legend { font-size: 1rem; font-weight: 600; }
 .field { margin: 20px 0; }
 .field label { display: block; margin-bottom: 8px; font-weight: 600; }
-.field input, .field select, .field textarea {
-  width: 100%;
-  min-height: 48px;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  background: var(--color-surface);
-  font-size: 16px;
-  font-family: inherit;
+.field input, .field select {
+  width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  color: var(--color-text); background: var(--color-surface);
+  font-size: 16px; font-family: inherit;
 }
-.field textarea { resize: vertical; line-height: 1.5; }
-.passwordLink { display: inline-block; padding: 12px 0; color: var(--color-primary); font-weight: 600; }
-.field input[readonly] { background: var(--color-soft); }
-.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible,
-.passwordLink:focus-visible, .save:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 2px;
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+.save, .secondary {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; max-width: 100%; padding: 12px 20px;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  font: inherit; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none;
 }
-.hint { margin-top: 8px; color: var(--color-muted); font-size: 0.85rem; }
-.save {
-  min-height: 48px;
-  padding: 12px 24px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  color: var(--color-surface);
-  background: var(--color-primary);
-  font-weight: 600;
-  cursor: pointer;
-}
+.save { color: var(--color-surface); background: var(--color-primary); }
 .save:hover { background: var(--color-primary-hover); }
-.form fieldset:disabled .save { opacity: 0.65; cursor: wait; }
+.secondary { color: var(--color-primary); background: var(--color-surface); border-color: var(--color-border); }
+.secondary:hover { background: var(--color-soft); }
+.passwordLink { display: inline-block; padding: 12px 0; margin-top: 12px; color: var(--color-primary); font-weight: 600; }
+.field input:focus-visible, .field select:focus-visible,
+.passwordLink:focus-visible, .save:focus-visible, .secondary:focus-visible {
+  outline: 3px solid var(--color-focus); outline-offset: 2px;
+}
+.hint { margin: 8px 0 16px; color: var(--color-muted); font-size: 0.85rem; }
+.form fieldset:disabled button { opacity: 0.65; cursor: wait; }
 .success, .error { margin-top: 20px; padding: 14px; border-radius: var(--radius-sm); overflow-wrap: anywhere; }
 .success { background: var(--color-peach-light); }
 .error { color: #8b2920; background: #fff0ed; }
+@media (min-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+}

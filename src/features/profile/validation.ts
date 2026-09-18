@@ -8,7 +8,6 @@ export type ProfileDetails = {
   division: string | null;
   shooting_hand: string | null;
   experience_level: string | null;
-  bio: string | null;
 };
 
 export type ProfileState = {
@@ -27,19 +26,17 @@ export function profileDisplayName(name: string | null | undefined) {
 export function validateProfileInput(form: FormData) {
   const profile: ProfileDetails = {
     display_name: null, club_or_team: null, division: null,
-    shooting_hand: null, experience_level: null, bio: null,
+    shooting_hand: null, experience_level: null,
   };
   const textFields = [
     ["display_name", "display name", DISPLAY_NAME_MAX_LENGTH],
     ["club_or_team", "club / team", 120],
-    ["bio", "bio", 500],
   ] as const;
   for (const [field, label, limit] of textFields) {
     const raw = form.get(field);
     if (typeof raw !== "string") {
       return { ok: false as const, message: `Enter your ${label}, or leave it blank.` };
     }
-    // Bio SQL btrim uses exactly String.trim's whitespace set. Keep internal newlines.
     const value = raw.trim();
     if (value.includes("\0") || /[\uD800-\uDFFF]/u.test(value)) {
       return { ok: false as const, message: `Your ${label} contains an unsupported character.` };

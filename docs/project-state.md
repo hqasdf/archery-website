@@ -1,6 +1,6 @@
 # Project state
 
-Updated: 2026-09-17
+Updated: 2026-09-18
 
 ## Sources and collaboration
 
@@ -10,9 +10,33 @@ The supplied Archery_Performance_Platform_Plan_with_NEA_Weather.docx defines the
 
 Phase 1, increment 1 foundation is implemented. Its build, lint, type checks, desktop/mobile layout, navigation, and automated accessibility checks passed.
 
-Stage 1 authentication is the working baseline confirmed by the user. Stage 2 adds the minimal private profile foundation. Existing authentication logic and configuration were preserved; the proxy matcher only adds `/profile/:path*`. Post-migration live authentication regression testing remains pending user interaction and must not be inferred from unit tests.
+Stage 1 authentication and Stage 2 profile creation, editing, RLS, and signup/OTP/recovery regressions are confirmed working by the user. Stage 2.1 added optional archer details and display-name personalization. Stage 2.2 removes bio, adds a profile display/edit card and an authenticated Supabase email-change request, and reserves an empty desktop column for future analysis. Existing authentication logic, proxy, cookies, templates, and settings remain unchanged. Fresh live credential/email regressions for this increment remain distinct from that confirmed baseline.
 
-The `public.profiles` table and `/profile` page are implemented. Profiles contain an optional display name and timestamps; email is displayed read-only from Auth. Session persistence, score entry, equipment, images, weather, analytics, goals, and AI remain unimplemented. The database migration is applied to the existing Supabase project; the website has not been deployed. Session empty states remain unconnected to data.
+The `public.profiles` table and `/profile` page are implemented. Profiles contain optional display name, club/team, division, shooting hand, experience level, and timestamps; email is displayed from Auth and changed only through its own request flow. Dashboard and Sessions personalize their headings from the user's own display name. Session persistence, score entry, equipment, images, weather, analytics, goals, and AI remain unimplemented. The database migrations are applied to the existing Supabase project; the website has not been deployed. Session empty states remain unconnected to data.
+
+## Stage 2.2 verification on 2026-09-18
+
+- Applied `20260918020718_remove_profile_bio.sql`. One existing non-null bio value was permanently deleted with user approval. A post-migration query confirmed the column is absent and RLS plus both ownership policies remain enabled.
+- Profile source code stopped selecting/saving bio before migration. Display and Account cards loaded afterward. Browser checks passed for Edit, Cancel discarding draft, Save returning to display, persistence after refresh, updated Dashboard/Sessions personalization, and blank-name fallback on all three pages. The original saved display name was restored after testing.
+- Change email opens a dedicated form. Same-email submission returns a clean error without requesting an update; malformed email is blocked by the browser and server validation is covered by unit tests. A live new-email request and both confirmation links still require user-owned inbox interaction. Secure Email Change was observed enabled, and its two-address link template and existing callback were left unchanged.
+- Change password opened the existing protected `/update-password` route. Passwords are not part of profiles.
+- Expanded SQL ownership tests passed against the live database in a rolled-back transaction: own read/save/clear, anonymous denial, cross-user SELECT/UPDATE denial, column restrictions, constraints, trigger/cascade, and bio absence.
+- At 320px and 390px, all three navigation links are visible at 44px height; Profile is not clipped, page width is below viewport width, and both Profile cards fit. Desktop navigation retains its original 17px horizontal padding, 14.4px font size, and 6px gap; the right Profile column remains empty.
+- Lint, typecheck, 22 unit tests, and production build passed. New live signup/OTP, sign-in/out, password recovery/update, and completed email change remain dependent on user-owned credentials/inboxes and are not claimed as retested in Stage 2.2.
+- Configuration discrepancy for later review: the live Supabase dashboard showed email OTP expiry of 3600 seconds, while the prior requirement was 300 seconds. Stage 2.2 did not change the setting.
+
+## Stage 2.1 verification on 2026-09-18
+
+- Applied `20260917150016_extend_profile_details.sql` through the existing connector. No tooling/dependencies installed. Existing RLS policies and triggers were not changed.
+- Immediate rolled-back Auth-row insertion confirmed the existing trigger creates the profile with all new columns null. This is not a real signup/email test.
+- Expanded SQL ownership tests passed: save/read/clear all fields, anonymous denial, cross-user SELECT/UPDATE denial, protected ownership/timestamps, choice/length constraints, Unicode bio trimming, creation, and cascading deletion. Fixture changes rolled back.
+- Browser save and refresh passed for display name, club/team, all three dropdowns, and multiline bio. Outer bio whitespace was removed; internal blank lines and indentation persisted. Clearing optional fields also passed.
+- Dashboard and Sessions displayed the saved test name. Dashboard blank-name fallback passed in the browser; the shared fallback helper passed unit tests. Sessions was later checked with the user's current name; its empty-name case was not separately repeated in the browser.
+- Email remained read-only. Change password navigated to the existing protected `/update-password` form. No credentials are stored in profiles.
+- Browser sign-out passed. Direct navigation to `/profile`, `/dashboard`, and `/sessions` afterward redirected to sign-in.
+- Lint, typecheck, all 19 tests, and production build passed. Source-file hashes confirmed existing authentication files and proxy remained unchanged.
+- User-entered values observed after the interruption were preserved rather than overwritten with earlier test values.
+- Fresh live signup/OTP, sign-in, and completed password recovery/update require user input and are not claimed as reverified by this increment. Mobile viewport visual testing has not been completed.
 
 ## Stage 2 verification on 2026-09-17
 
@@ -22,7 +46,7 @@ The `public.profiles` table and `/profile` page are implemented. Profiles contai
 - `supabase/tests/profile-ownership.sql` passed against the live database within a rolled-back transaction: own-profile SELECT/save/clear, anonymous denial, cross-user SELECT/UPDATE denial, column restrictions, client INSERT/DELETE denial, name-length constraint, uniqueness, and cascading deletion.
 - Browser direct navigation to `/profile` while signed out redirected to `/sign-in`.
 - Lint, typecheck, all 15 unit tests, and production build passed.
-- Pending: real signup and OTP regression immediately requested from the user after migration; signed-in profile save and refresh; sign-in/sign-out and password-recovery regressions. No fresh signup was observed at the final database check. Do not mark Stage 2 fully verified until these pass.
+- At the original report, live account tests were pending. The user subsequently confirmed Stage 2 profile creation/editing/RLS and signup/OTP/auth/recovery tests passed before approving Stage 2.1.
 
 ## Historical foundation verification on 2026-09-15
 
