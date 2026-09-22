@@ -2,9 +2,11 @@ import type { Division } from "./round-presets";
 export type ScoreLabel = "X"|"10"|"9"|"8"|"7"|"6"|"5"|"4"|"3"|"2"|"1"|"M";
 export type TargetFaceType = "full_face"|"six_ring"|"triple_face";
 export type Plot = { x: number; y: number; faceIndex?: 0|1|2 };
-export type ArrowEntry = { id: string; end: number; arrow: number; score: ScoreLabel; plot: Plot|null };
-export type RoundDraft = { id: string; name: string; division: Division; distanceMetres: number; ends: number; arrowsPerEnd: number; faceDiameterCm: number; faceType: TargetFaceType; arrows: ArrowEntry[] };
-export type SessionDraft = { id: string; title: string; date: string; rounds: RoundDraft[] };
+export type ArrowSyncState = "saving"|"saved"|"failed";
+export type SessionType = "training"|"competition";
+export type ArrowEntry = { id: string; end: number; arrow: number; score: ScoreLabel; plot: Plot|null; syncState?: ArrowSyncState };
+export type RoundDraft = { id: string; roundNumber: number; name: string; division: Division; distanceMetres: number; ends: number; arrowsPerEnd: number; faceDiameterCm: number; faceType: TargetFaceType; arrows: ArrowEntry[] };
+export type SessionDraft = { id: string; title: string; date: string; sessionType: SessionType; arrowCount: number; rounds: RoundDraft[] };
 export const SCORE_LABELS: ScoreLabel[] = ["X","10","9","8","7","6","5","4","3","2","1","M"];
 export function scoreFromPlot({ x, y }: Plot, faceType: TargetFaceType = "full_face"): ScoreLabel {
   const distance = Math.hypot(x, y);

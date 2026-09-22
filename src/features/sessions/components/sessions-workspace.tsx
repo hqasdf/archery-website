@@ -1,109 +1,112 @@
 "use client";
 import { useState } from "react";
+import { createRoundWithEnds, createSession, deleteRound, deleteSession, updateSessionArrowCount } from "../actions";
 import { DIVISIONS, ROUND_PRESETS, TARGET_FACE_OPTIONS, type Division, type RoundPreset } from "../round-presets";
-import type { RoundDraft, SessionDraft, TargetFaceType } from "../scoring-model";
+import { roundTotal, type RoundDraft, type SessionDraft, type SessionType, type TargetFaceType } from "../scoring-model";
 import { RoundPresetsPanel } from "./round-presets-panel";
 import { ScoringWorkspace } from "./scoring-workspace";
 import styles from "./sessions.module.css";
 
-type View = "sessions"|"session"|"setup"|"scoring";
-type RoundForm = Omit<RoundDraft, "id"|"arrows">;
-const today = new Date().toISOString().slice(0,10);
-const base = ROUND_PRESETS[3];
+type View="sessions"|"new-session"|"session"|"setup"|"scoring";
+type RoundForm=Omit<RoundDraft,"id"|"roundNumber"|"arrows">;
+const today=new Date().toISOString().slice(0,10);
+const base=ROUND_PRESETS[3];
 
-export function SessionsWorkspace() {
+export function SessionsWorkspace({initialSessions}:{initialSessions:SessionDraft[]}) {
   const [view,setView]=useState<View>("sessions");
-  const [session,setSession]=useState<SessionDraft|null>(null);
+  const [sessions,setSessions]=useState(initialSessions);
+  const [arrowCountDrafts,setArrowCountDrafts]=useState<Record<string,string>>(()=>Object.fromEntries(initialSessions.map((item)=>[item.id,String(item.arrowCount)])));
+  const [activeSessionId,setActiveSessionId]=useState<string|null>(null);
   const [activeRoundId,setActiveRoundId]=useState<string|null>(null);
-  const [sessionForm,setSessionForm]=useState({title:"",date:today});
+  const [sessionForm,setSessionForm]=useState<{title:string;date:string;sessionType:SessionType}>({title:"",date:today,sessionType:"training"});
   const [selectedPreset,setSelectedPreset]=useState<string|null>(base.id);
   const [roundForm,setRoundForm]=useState<RoundForm>({name:base.name,division:"Recurve",distanceMetres:base.distanceMetres,ends:base.defaultEnds,arrowsPerEnd:base.defaultArrowsPerEnd,faceDiameterCm:base.faceDiameterCm,faceType:base.faceType});
+  const [pending,setPending]=useState(false);
+  const [arrowCountSaving,setArrowCountSaving]=useState(false);
+  const [message,setMessage]=useState<string|null>(null);
+  const session=sessions.find((item)=>item.id===activeSessionId)??null;
   const activeRound=session?.rounds.find((round)=>round.id===activeRoundId)??null;
+
   function choosePreset(preset:RoundPreset) {
     const target=defaultTarget(preset.distanceMetres,roundForm.division,{faceDiameterCm:preset.faceDiameterCm,faceType:preset.faceType});
     setSelectedPreset(preset.id==="custom"?null:preset.id);
     setRoundForm((current)=>({...current,name:preset.name,distanceMetres:preset.distanceMetres,ends:preset.defaultEnds,arrowsPerEnd:preset.defaultArrowsPerEnd,...target}));
   }
-  function changeDistance(distanceMetres:number) {
-    setRoundForm((current)=>({...current,distanceMetres,...defaultTarget(distanceMetres,current.division,{faceDiameterCm:current.faceDiameterCm,faceType:current.faceType})}));
+  function changeDistance(distanceMetres:number) { setRoundForm((current)=>({...current,distanceMetres,...defaultTarget(distanceMetres,current.division,{faceDiameterCm:current.faceDiameterCm,faceType:current.faceType})})); }
+  function changeDivision(division:Division) { setRoundForm((current)=>current.distanceMetres===50&&division==="Compound"?{...current,division,faceDiameterCm:80,faceType:"six_ring"}:{...current,division}); }
+  function chooseTargetOption(id:string) { const option=TARGET_FACE_OPTIONS.find((item)=>item.id===id); if (option) setRoundForm((current)=>({...current,faceDiameterCm:option.diameterCm,faceType:option.faceType})); }
+
+  async function submitSession(event:React.FormEvent) {
+    event.preventDefault(); setPending(true); setMessage(null);
+    const result=await createSession(sessionForm); setPending(false);
+    if (!result.ok) { setMessage(result.message); return; }
+    setSessions((current)=>[result.data,...current]); setArrowCountDrafts((current)=>({...current,[result.data.id]:String(result.data.arrowCount)})); setActiveSessionId(result.data.id); setView("session"); setSessionForm({title:"",date:today,sessionType:"training"});
   }
-  function changeDivision(division:Division) {
-    setRoundForm((current)=>current.distanceMetres===50&&division==="Compound"
-      ? {...current,division,faceDiameterCm:80,faceType:"six_ring"}
-      : {...current,division});
+  async function submitRound(event:React.FormEvent) {
+    event.preventDefault(); if (!session) return; setPending(true); setMessage(null);
+    const result=await createRoundWithEnds({sessionId:session.id,roundNumber:session.rounds.length+1,...roundForm}); setPending(false);
+    if (!result.ok) { setMessage(result.message); return; }
+    setSessions((current)=>current.map((item)=>item.id===session.id?{...item,rounds:[...item.rounds,result.data]}:item)); setActiveRoundId(result.data.id); setView("scoring");
   }
-  function chooseTargetOption(id:string) {
-    const option=TARGET_FACE_OPTIONS.find((item)=>item.id===id);
-    if (option) setRoundForm((current)=>({...current,faceDiameterCm:option.diameterCm,faceType:option.faceType}));
+  function updateRound(roundId:string,update:(round:RoundDraft)=>RoundDraft) {
+    setSessions((current)=>current.map((item)=>item.id===activeSessionId?{...item,rounds:item.rounds.map((round)=>round.id===roundId?update(round):round)}:item));
   }
-  function createSession(event:React.FormEvent) {
-    event.preventDefault();
-    setSession({id:"prototype-session",title:sessionForm.title.trim()||"Practice session",date:sessionForm.date,rounds:[]});
-    setView("session");
+  async function removeRound(roundId:string) {
+    setMessage(null); const result=await deleteRound(roundId); if (!result.ok) { setMessage(result.message); return; }
+    setSessions((current)=>current.map((item)=>item.id===activeSessionId?{...item,rounds:item.rounds.filter((round)=>round.id!==roundId)}:item));
   }
-  function createRound(event:React.FormEvent) {
-    event.preventDefault();
+  async function removeSession(sessionId:string) {
+    setMessage(null); const result=await deleteSession(sessionId); if (!result.ok) { setMessage(result.message); return; }
+    setSessions((current)=>current.filter((item)=>item.id!==sessionId)); setActiveSessionId(null); setView("sessions");
+  }
+  async function saveSessionArrowCount() {
     if (!session) return;
-    const round:RoundDraft={id:`round-${Date.now()}`,...roundForm,arrows:[]};
-    setSession({...session,rounds:[...session.rounds,round]});
-    setActiveRoundId(round.id);
-    setView("scoring");
+    const value=arrowCountDrafts[session.id]??String(session.arrowCount);
+    if (!/^\d+$/.test(value)) { setMessage("Arrow count must be a non-negative whole number."); return; }
+    setArrowCountSaving(true); setMessage(null);
+    const result=await updateSessionArrowCount({sessionId:session.id,arrowCount:Number(value)}); setArrowCountSaving(false);
+    if (!result.ok) { setMessage(result.message); return; }
+    setSessions((current)=>current.map((item)=>item.id===session.id?{...item,arrowCount:result.data}:item));
+    setArrowCountDrafts((current)=>({...current,[session.id]:String(result.data)}));
   }
-  function updateRound(next:RoundDraft) {
-    if (session) setSession({...session,rounds:session.rounds.map((round)=>round.id===next.id?next:round)});
-  }
-  if (view==="scoring"&&session&&activeRound) return <><PrototypeNotice/><ScoringWorkspace sessionTitle={session.title} sessionDate={session.date} round={activeRound} onChange={updateRound} onBack={()=>setView("session")}/></>;
+  function openSession(item:SessionDraft) { setActiveSessionId(item.id); setActiveRoundId(null); setMessage(null); setView("session"); }
+  const trainingSessions=sessions.filter((item)=>item.sessionType==="training");
+  const competitionSessions=sessions.filter((item)=>item.sessionType==="competition");
+
+  if (view==="scoring"&&session&&activeRound) return <><SavedNotice/><ScoringWorkspace sessionTitle={session.title} sessionDate={session.date} round={activeRound} onChange={(update)=>updateRound(activeRound.id,update)} onBack={()=>setView("session")}/></>;
   return <section className={styles.workspace}>
-    <PrototypeNotice/>
-    {view==="sessions"&&<div className={styles.startCard}>
-      <div><p className={styles.kicker}>Local scoring prototype</p><h2>Start today’s scorecard</h2><p>Create a temporary Session, then add as many Rounds as you need.</p></div>
-      {session?<button className={styles.primary} type="button" onClick={()=>setView("session")}>Open temporary Session</button>:<button className={styles.primary} type="button" onClick={()=>setView("session")}>New Session</button>}
+    <SavedNotice/>{message&&<p className={styles.saveError} role="alert">{message}</p>}
+    {view==="sessions"&&<div>
+      <div className={styles.sessionHeading}><div><p className={styles.kicker}>Training history</p><h2>{sessions.length?"Your saved Sessions":"Start today’s scorecard"}</h2><p>{sessions.length?"Open a Session or start another scorecard.":"Create a Session, then add as many Rounds as you need."}</p></div><button className={styles.primary} type="button" onClick={()=>setView("new-session")}>New Session</button></div>
+      {sessions.length>0&&<div className={styles.sessionSections}><SessionSection heading="Training" emptyMessage="No Training Sessions yet." sessions={trainingSessions} onOpen={openSession} onDelete={removeSession}/><SessionSection heading="Competitions" emptyMessage="No Competitions yet." sessions={competitionSessions} onOpen={openSession} onDelete={removeSession}/></div>}
     </div>}
-    {view==="session"&&!session&&<form className={styles.formCard} onSubmit={createSession}>
-      <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={()=>setView("sessions")}>← Sessions</button><p>New Session</p></div>
-      <h2>Create a Session</h2><p className={styles.formIntro}>Only the date is required. Give the visit a title if that helps.</p>
-      <div className={styles.formGrid}>
-        <label><span>Session date</span><input required type="date" value={sessionForm.date} onChange={(e)=>setSessionForm({...sessionForm,date:e.target.value})}/></label>
-        <label><span>Title <small>optional</small></span><input type="text" maxLength={80} placeholder="Evening practice" value={sessionForm.title} onChange={(e)=>setSessionForm({...sessionForm,title:e.target.value})}/></label>
-      </div>
-      <button className={styles.primary} type="submit">Create Session</button>
+    {view==="new-session"&&<form className={styles.formCard} onSubmit={submitSession}>
+      <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={()=>setView("sessions")}>← Sessions</button><p>New Session</p></div><h2>Create a Session</h2><p className={styles.formIntro}>Choose how this Session should appear in your journal.</p>
+      <fieldset className={styles.sessionTypeChoice}><legend>Session type</legend><label><input type="radio" name="session-type" value="training" checked={sessionForm.sessionType==="training"} onChange={()=>setSessionForm({...sessionForm,sessionType:"training"})}/><span>Training Session</span></label><label><input type="radio" name="session-type" value="competition" checked={sessionForm.sessionType==="competition"} onChange={()=>setSessionForm({...sessionForm,sessionType:"competition"})}/><span>Competition</span></label></fieldset>
+      <div className={styles.formGrid}><label><span>Session date</span><input required type="date" value={sessionForm.date} onChange={(e)=>setSessionForm({...sessionForm,date:e.target.value})}/></label><label><span>{sessionForm.sessionType==="competition"?"Competition name":"Title"} <small>optional</small></span><input type="text" maxLength={80} placeholder={sessionForm.sessionType==="competition"?"National Championships":"Evening practice"} value={sessionForm.title} onChange={(e)=>setSessionForm({...sessionForm,title:e.target.value})}/></label></div>
+      <button className={styles.primary} disabled={pending} type="submit">{pending?"Saving…":"Create Session"}</button>
     </form>}
     {view==="session"&&session&&<div>
       <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={()=>setView("sessions")}>← Sessions</button><p>{session.date}</p></div>
-      <div className={styles.sessionHeading}><div><p className={styles.kicker}>Temporary Session</p><h2>{session.title}</h2></div><button className={styles.primary} type="button" onClick={()=>setView("setup")}>Add Round</button></div>
-      {session.rounds.length===0?<div className={styles.emptyRounds}><h3>No rounds yet</h3><p>Add a preset or create a custom Round to begin scoring.</p></div>:<div className={styles.roundCards}>
-        {session.rounds.map((round)=><article key={round.id} className={styles.roundCard}><div><p className={styles.kicker}>{round.division}</p><h3>{round.name}</h3><p>{round.distanceMetres} m · {round.ends} ends × {round.arrowsPerEnd} arrows</p></div><div><strong>{round.arrows.length}</strong><span> entered</span><button type="button" onClick={()=>{setActiveRoundId(round.id);setView("scoring");}}>Open</button></div></article>)}
-      </div>}
+      <div className={styles.sessionHeading}><div><p className={styles.kicker}>{session.sessionType==="competition"?"Competition":"Training Session"}</p><h2>{session.title}</h2></div><button className={styles.primary} type="button" onClick={()=>setView("setup")}>Add Round</button></div>
+      <div className={styles.sessionArrowCount}><label htmlFor={`session-arrow-count-${session.id}`}><span>Arrow count</span><input id={`session-arrow-count-${session.id}`} required type="text" inputMode="numeric" pattern="[0-9]*" value={arrowCountDrafts[session.id]??String(session.arrowCount)} onChange={(event)=>{if (/^\d*$/.test(event.target.value)) setArrowCountDrafts((current)=>({...current,[session.id]:event.target.value}));}}/></label><button type="button" disabled={arrowCountSaving} onClick={saveSessionArrowCount}>{arrowCountSaving?"Saving…":"Save"}</button></div>
+      {session.rounds.length===0?<div className={styles.emptyRounds}><h3>No rounds yet</h3><p>Add a preset or create a custom Round to begin scoring.</p></div>:<div className={styles.roundCards}>{session.rounds.map((round)=><article key={round.id} className={styles.roundCard}><div><p className={styles.kicker}>{round.division}</p><h3>{round.name}</h3><p>{round.distanceMetres} m · {round.ends} ends × {round.arrowsPerEnd} arrows</p><p className={styles.roundScore}>Score: <strong>{roundTotal(round.arrows.filter((arrow)=>arrow.syncState==="saved"))}</strong></p></div><div className={styles.cardActions}><button type="button" onClick={()=>{setActiveRoundId(round.id);setView("scoring");}}>Open</button><button type="button" className={styles.dangerText} onClick={()=>removeRound(round.id)}>Delete</button></div></article>)}</div>}
     </div>}
-    {view==="setup"&&session&&<form className={styles.formCard} onSubmit={createRound}>
-      <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={()=>setView("session")}>← Session</button><p>Round {session.rounds.length+1}</p></div>
-      <h2>Configure Round</h2><p className={styles.formIntro}>Presets are starting points. Adjust anything to match what you are shooting.</p>
-      <RoundPresetsPanel selectedId={selectedPreset} onSelect={choosePreset}/>
-      <div className={styles.formGrid}>
-        <label className={styles.fullField}><span>Round name</span><input required value={roundForm.name} onChange={(e)=>setRoundForm({...roundForm,name:e.target.value})}/></label>
-        <label><span>Division</span><select value={roundForm.division} onChange={(e)=>changeDivision(e.target.value as Division)}>{DIVISIONS.map((item)=><option key={item}>{item}</option>)}</select></label>
-        <NumberField label="Distance (m)" value={roundForm.distanceMetres} onChange={changeDistance}/>
-        <NumberField label="Number of Ends" value={roundForm.ends} onChange={(value)=>setRoundForm({...roundForm,ends:value})}/>
-        <NumberField label="Arrows per End" value={roundForm.arrowsPerEnd} onChange={(value)=>setRoundForm({...roundForm,arrowsPerEnd:value})}/>
-        <label className={styles.fullField}><span>Target face option</span><select value={TARGET_FACE_OPTIONS.find((item)=>item.diameterCm===roundForm.faceDiameterCm&&item.faceType===roundForm.faceType)?.id??"custom"} onChange={(e)=>chooseTargetOption(e.target.value)}>
-          <option value="custom" disabled>Custom target settings</option>{TARGET_FACE_OPTIONS.map((item)=><option key={item.id} value={item.id}>{item.label}</option>)}
-        </select></label>
-        <NumberField label="Target face diameter (cm)" value={roundForm.faceDiameterCm} onChange={(value)=>setRoundForm({...roundForm,faceDiameterCm:value})}/>
-        <label><span>Target face layout</span><select value={roundForm.faceType} onChange={(e)=>setRoundForm({...roundForm,faceType:e.target.value as TargetFaceType})}>
-          <option value="full_face">Full face</option><option value="six_ring">6-ring face</option><option value="triple_face">Triple face</option>
-        </select></label>
-      </div>
-      <button className={styles.primary} type="submit">Start scoring</button>
+    {view==="setup"&&session&&<form className={styles.formCard} onSubmit={submitRound}>
+      <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={()=>setView("session")}>← Session</button><p>Round {session.rounds.length+1}</p></div><h2>Configure Round</h2><p className={styles.formIntro}>Presets are starting points. Adjust anything to match what you are shooting.</p><RoundPresetsPanel selectedId={selectedPreset} onSelect={choosePreset}/>
+      <div className={styles.formGrid}><label className={styles.fullField}><span>Round name</span><input required value={roundForm.name} onChange={(e)=>setRoundForm({...roundForm,name:e.target.value})}/></label><label><span>Division</span><select value={roundForm.division} onChange={(e)=>changeDivision(e.target.value as Division)}>{DIVISIONS.map((item)=><option key={item}>{item}</option>)}</select></label><NumberField label="Distance (m)" value={roundForm.distanceMetres} onChange={changeDistance}/><DirectNumberField label="Number of Ends" value={roundForm.ends} onChange={(value)=>setRoundForm({...roundForm,ends:value})}/><DirectNumberField label="Arrows per End" value={roundForm.arrowsPerEnd} onChange={(value)=>setRoundForm({...roundForm,arrowsPerEnd:value})}/><label className={styles.fullField}><span>Target face option</span><select value={TARGET_FACE_OPTIONS.find((item)=>item.diameterCm===roundForm.faceDiameterCm&&item.faceType===roundForm.faceType)?.id??"custom"} onChange={(e)=>chooseTargetOption(e.target.value)}><option value="custom" disabled>Custom target settings</option>{TARGET_FACE_OPTIONS.map((item)=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label><NumberField label="Target face diameter (cm)" value={roundForm.faceDiameterCm} onChange={(value)=>setRoundForm({...roundForm,faceDiameterCm:value})}/><label><span>Target face layout</span><select value={roundForm.faceType} onChange={(e)=>setRoundForm({...roundForm,faceType:e.target.value as TargetFaceType})}><option value="full_face">Full face</option><option value="six_ring">6-ring face</option><option value="triple_face">Triple face</option></select></label></div>
+      <button className={styles.primary} disabled={pending} type="submit">{pending?"Creating Ends…":"Start scoring"}</button>
     </form>}
   </section>;
 }
-function NumberField({label,value,onChange}:{label:string;value:number;onChange:(value:number)=>void}) {
-  return <label><span>{label}</span><input required type="number" min="1" step="1" value={value} onChange={(e)=>onChange(Math.max(1,Number(e.target.value)))}/></label>;
+function SessionSection({heading,emptyMessage,sessions,onOpen,onDelete}:{heading:string;emptyMessage:string;sessions:SessionDraft[];onOpen:(session:SessionDraft)=>void;onDelete:(id:string)=>void}) {
+  return <section aria-labelledby={`session-section-${heading.toLowerCase()}`}><h3 id={`session-section-${heading.toLowerCase()}`} className={styles.sessionSectionTitle}>{heading}</h3>{sessions.length===0?<p className={styles.sessionSectionEmpty}>{emptyMessage}</p>:<div className={styles.roundCards}>{sessions.map((item)=><article key={item.id} className={styles.roundCard}><div><p className={styles.kicker}>{item.date}</p><h3>{item.title}</h3><p>{item.rounds.length} {item.rounds.length===1?"Round":"Rounds"}</p><p>Arrow count: <strong>{item.arrowCount}</strong></p></div><div className={styles.cardActions}><button type="button" onClick={()=>onOpen(item)}>Open</button><button type="button" className={styles.dangerText} onClick={()=>onDelete(item.id)}>Delete</button></div></article>)}</div>}</section>;
 }
-function defaultTarget(distanceMetres:number,division:Division,fallback:{faceDiameterCm:number;faceType:TargetFaceType}) {
-  if (distanceMetres===70) return {faceDiameterCm:122,faceType:"full_face" as const};
-  if (distanceMetres===50&&division==="Compound") return {faceDiameterCm:80,faceType:"six_ring" as const};
-  if (distanceMetres===18) return {faceDiameterCm:40,faceType:"full_face" as const};
-  return fallback;
+function NumberField({label,value,onChange}:{label:string;value:number;onChange:(value:number)=>void}) { return <label><span>{label}</span><input required type="number" min="1" step="1" value={value} onChange={(e)=>onChange(Math.max(1,Number(e.target.value)))}/></label>; }
+function DirectNumberField({label,value,onChange}:{label:string;value:number;onChange:(value:number)=>void}) {
+  const [editingText,setEditingText]=useState<string|null>(null);
+  const text=editingText??String(value);
+  return <label><span>{label}</span><input required type="text" inputMode="numeric" pattern="[0-9]*" value={text} onFocus={()=>setEditingText(String(value))} onChange={(event)=>{const next=event.target.value;if (!/^\d*$/.test(next)) return;setEditingText(next);if (next!=="") onChange(Number(next));}} onBlur={()=>setEditingText(null)}/></label>;
 }
-function PrototypeNotice() { return <p className={styles.prototypeNotice}>Prototype · This Session lives only on this page. Refreshing or leaving /sessions resets it.</p>; }
+function defaultTarget(distanceMetres:number,division:Division,fallback:{faceDiameterCm:number;faceType:TargetFaceType}) { if (distanceMetres===70) return {faceDiameterCm:122,faceType:"full_face" as const}; if (distanceMetres===50&&division==="Compound") return {faceDiameterCm:80,faceType:"six_ring" as const}; if (distanceMetres===18) return {faceDiameterCm:40,faceType:"full_face" as const}; return fallback; }
+function SavedNotice() { return <p className={styles.prototypeNotice}>Scores and plotted arrows are saved to your Arc Track account.</p>; }

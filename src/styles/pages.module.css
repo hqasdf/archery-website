@@ -97,6 +97,50 @@
   margin: 8px auto 0;
   max-width: 440px;
 }
+.recentSessions {
+  display: grid;
+  gap: 12px;
+}
+.recentSession {
+  padding: 20px 22px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.recentSessionTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 18px;
+}
+.recentSessionTop > span,
+.recentDate,
+.recentNoRounds {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
+.recentDate {
+  margin-bottom: 5px;
+}
+.recentRounds {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--color-border);
+}
+.recentRounds li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 11px;
+  font-size: 0.82rem;
+}
+.recentRounds strong {
+  white-space: nowrap;
+}
+.recentNoRounds {
+  margin-top: 12px;
+}
 .note {
   display: flex;
   gap: 13px;
@@ -246,6 +290,12 @@
   }
   .sectionHeading > span {
     display: none;
+  }
+  .recentSessionTop,
+  .recentRounds li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
   }
   .panelHeader {
     padding: 22px 20px 16px;
