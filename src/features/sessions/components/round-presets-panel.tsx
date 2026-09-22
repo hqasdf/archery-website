@@ -1,38 +1,16 @@
-import { MAX_ARROW_SCORE, ROUND_PRESETS } from "../round-presets";
-import styles from "@/styles/pages.module.css";
-
-export function RoundPresetsPanel() {
-  return (
-    <section className={styles.panel} aria-labelledby="rounds-heading">
-      <div className={styles.panelHeader}>
-        <p className={styles.eyebrow}>Recurve & compound</p>
-        <h2 id="rounds-heading">Your starting rounds</h2>
-        <p>Default arrangements, with room to adapt.</p>
-      </div>
-      <ul className={styles.roundList}>
-        {ROUND_PRESETS.map((round) => (
-          <li key={round.id} className={styles.round}>
-            <p className={styles.distance}>
-              {round.distanceMetres} <span>m</span>
-            </p>
-            <p className={styles.arrangement}>
-              {round.defaultEnds} ends × {round.defaultArrowsPerEnd} arrows
-              <span>
-                {round.requiredArrows} arrows ·{" "}
-                {round.requiredArrows * MAX_ARROW_SCORE} points maximum
-              </span>
-            </p>
-          </li>
-        ))}
-      </ul>
-      <details className={styles.details}>
-        <summary>A different end arrangement?</summary>
-        <p>
-          You will be able to adjust the arrangement when logging. At 70 m, 3
-          ends of 12 arrows still make a complete 36-arrow round. Custom rounds
-          will let you specify a different distance and round length.
-        </p>
-      </details>
-    </section>
-  );
+import { ROUND_PRESETS, type RoundPreset } from "../round-presets";
+import styles from "./sessions.module.css";
+export function RoundPresetsPanel({ selectedId, onSelect }: { selectedId: string | null; onSelect: (preset: RoundPreset) => void }) {
+  return <fieldset className={styles.presetPanel}>
+    <legend>Start with a preset</legend>
+    <p className={styles.fieldHint}>Choose one to prefill the form. Every value stays editable.</p>
+    <div className={styles.presetGrid}>
+      {ROUND_PRESETS.map((round) => <button key={round.id} type="button" className={selectedId === round.id ? styles.presetSelected : styles.preset} aria-pressed={selectedId === round.id} onClick={() => onSelect(round)}>
+        <strong>{round.distanceMetres} m</strong><span>{round.defaultEnds} ends × {round.defaultArrowsPerEnd}</span>
+      </button>)}
+      <button type="button" className={selectedId === null ? styles.presetSelected : styles.preset} aria-pressed={selectedId === null} onClick={() => onSelect({ id: "custom", name: "Custom round", distanceMetres: 30, defaultEnds: 6, defaultArrowsPerEnd: 6, faceDiameterCm: 80, faceType: "full_face" })}>
+        <strong>Custom</strong><span>Set your own format</span>
+      </button>
+    </div>
+  </fieldset>;
 }

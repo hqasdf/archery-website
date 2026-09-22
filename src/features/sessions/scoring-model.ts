@@ -1,0 +1,30 @@
+import type { Division } from "./round-presets";
+export type ScoreLabel = "X"|"10"|"9"|"8"|"7"|"6"|"5"|"4"|"3"|"2"|"1"|"M";
+export type TargetFaceType = "full_face"|"six_ring"|"triple_face";
+export type Plot = { x: number; y: number; faceIndex?: 0|1|2 };
+export type ArrowEntry = { id: string; end: number; arrow: number; score: ScoreLabel; plot: Plot|null };
+export type RoundDraft = { id: string; name: string; division: Division; distanceMetres: number; ends: number; arrowsPerEnd: number; faceDiameterCm: number; faceType: TargetFaceType; arrows: ArrowEntry[] };
+export type SessionDraft = { id: string; title: string; date: string; rounds: RoundDraft[] };
+export const SCORE_LABELS: ScoreLabel[] = ["X","10","9","8","7","6","5","4","3","2","1","M"];
+export function scoreFromPlot({ x, y }: Plot, faceType: TargetFaceType = "full_face"): ScoreLabel {
+  const distance = Math.hypot(x, y);
+  if (faceType === "six_ring" && distance > 0.60) return "M";
+  if (faceType === "triple_face" && distance > 0.50) return "M";
+  if (distance <= 0.05) return "X";
+  if (distance <= 0.10) return "10";
+  if (distance <= 0.20) return "9";
+  if (distance <= 0.30) return "8";
+  if (distance <= 0.40) return "7";
+  if (distance <= 0.50) return "6";
+  if (distance <= 0.60) return "5";
+  if (distance <= 0.70) return "4";
+  if (distance <= 0.80) return "3";
+  if (distance <= 0.90) return "2";
+  if (distance <= 1.00) return "1";
+  return "M";
+}
+export function points(score: ScoreLabel) { return score === "X" ? 10 : score === "M" ? 0 : Number(score); }
+export function roundTotal(arrows: ArrowEntry[]) { return arrows.reduce((sum, item) => sum + points(item.score), 0); }
+export function endTotal(arrows: ArrowEntry[], end: number) { return roundTotal(arrows.filter((item) => item.end === end)); }
+export function xCount(arrows: ArrowEntry[]) { return arrows.filter((item) => item.score === "X").length; }
+export function arrowKey(end: number, arrow: number) { return `${end}-${arrow}`; }
