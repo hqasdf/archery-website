@@ -29,17 +29,14 @@ export function shouldCommitTargetTap(input: { moved: boolean; hadMultiTouch: bo
   return !input.moved && !input.hadMultiTouch && !input.suppressed && input.pointerCount === 1;
 }
 
-export type TargetTapIntent = "plot" | "select";
-
-/** Resolve one completed pointer session to one and only one target intent. */
-export function resolveTargetTapIntent(input: {
-  arrowId: string | null;
+/** A target surface gesture plots the current Arrow, including a moved selected Arrow. */
+export function shouldPlotTargetSurface(input: {
+  hasSelectedArrow: boolean;
   moved: boolean;
   hadMultiTouch: boolean;
   suppressed: boolean;
   pointerCount: number;
-}): TargetTapIntent | null {
-  if (input.hadMultiTouch || input.suppressed || input.pointerCount !== 1) return null;
-  if (input.arrowId) return input.moved ? "plot" : "select";
-  return input.moved ? null : "plot";
+}) {
+  if (input.hadMultiTouch || input.suppressed || input.pointerCount !== 1) return false;
+  return input.hasSelectedArrow || !input.moved;
 }
