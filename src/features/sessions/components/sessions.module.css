@@ -8,3 +8,7 @@
 @media(max-width:760px){.presetGrid{grid-template-columns:repeat(2,1fr)}.scoringGrid{grid-template-columns:1fr}.target{width:min(100%,390px)}}
 @media(max-width:540px){.startCard,.sessionHeading,.scoreHeading,.roundCard{align-items:stretch;flex-direction:column}.startCard,.formCard{padding:20px}.startCard .primary,.sessionHeading .primary{width:100%}.formGrid{grid-template-columns:1fr}.fullField{grid-column:auto}.sessionTypeChoice{display:grid}.current{text-align:left}.totals{grid-template-columns:repeat(2,1fr)}.totals div:nth-child(2){border-right:0}.totals div:nth-child(-n+2){border-bottom:1px solid var(--color-border)}.scoringGrid{gap:12px}.entryPanel,.targetWrap,.roundLog{padding:14px}.scoreButtons{gap:7px}.scoreButtons button{min-height:56px}.target{width:100%}.roundCard>div:last-child{text-align:left}.roundCard button{margin-left:0;width:100%}.logGrid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:340px){.presetGrid{grid-template-columns:1fr 1fr}.endNav{font-size:.72rem}.endNav button{padding:6px}.logGrid{grid-template-columns:repeat(2,1fr)}.correctionPanel{grid-template-columns:repeat(4,1fr)}}
+
+/* Five scoring totals, including the derived arrow average. */
+.totals{grid-template-columns:repeat(5,1fr)}
+@media(max-width:540px){.totals{grid-template-columns:repeat(2,1fr)}.totals div:nth-child(2),.totals div:nth-child(4){border-right:0}.totals div:nth-child(-n+4){border-bottom:1px solid var(--color-border)}}

@@ -4,7 +4,7 @@ import { readOwnDisplayName } from "@/features/profile/read.server";
 import { ActionLink } from "@/components/ui/action-link";
 import { Icon } from "@/components/ui/icon";
 import { readRecentTrainingSessions } from "@/features/sessions/read.server";
-import { roundTotal } from "@/features/sessions/scoring-model";
+import { arrowAverage, roundTotal, type ArrowEntry } from "@/features/sessions/scoring-model";
 import styles from "@/styles/pages.module.css";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
           </span>
           <h3>No Training Sessions yet</h3>
           <p>Your recent saved training will appear here.</p>
-        </div> : <div className={styles.recentSessions}>{recentSessions.map((session)=><article key={session.id} className={styles.recentSession}><div className={styles.recentSessionTop}><div><p className={styles.recentDate}>{formatSessionDate(session.date)}</p><h3>{session.title}</h3></div><span>{session.arrowCount} arrows</span></div>{session.rounds.length===0?<p className={styles.recentNoRounds}>No Rounds recorded yet.</p>:<ul className={styles.recentRounds}>{session.rounds.map((round)=><li key={round.id}><span>{round.name} · {round.distanceMetres} m</span><strong>Score: {roundTotal(round.arrows)}</strong></li>)}</ul>}</article>)}</div>}
+        </div> : <div className={styles.recentSessions}>{recentSessions.map((session)=><article key={session.id} className={styles.recentSession}><div className={styles.recentSessionTop}><div><p className={styles.recentDate}>{formatSessionDate(session.date)}</p><h3>{session.title}</h3></div><span>{session.arrowCount} arrows</span></div>{session.rounds.length===0?<p className={styles.recentNoRounds}>No Rounds recorded yet.</p>:<ul className={styles.recentRounds}>{session.rounds.map((round)=><li key={round.id}><span>{round.name} · {round.distanceMetres} m</span><strong>Score: {roundTotal(round.arrows)} · Avg. {formatArrowAverage(round.arrows)}</strong></li>)}</ul>}</article>)}</div>}
       </section>
       <div className={styles.note}>
         <Icon name="check" size={18} />
@@ -62,3 +62,4 @@ export default async function DashboardPage() {
 function formatSessionDate(value: string) {
   return new Intl.DateTimeFormat("en-SG", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 }
+function formatArrowAverage(arrows:ArrowEntry[]) { const average=arrowAverage(arrows); return average === null ? "—" : average.toFixed(1); }

@@ -27,6 +27,7 @@ export function scoreFromPlot({ x, y }: Plot, faceType: TargetFaceType = "full_f
 }
 export function points(score: ScoreLabel) { return score === "X" ? 10 : score === "M" ? 0 : Number(score); }
 export function roundTotal(arrows: ArrowEntry[]) { return arrows.reduce((sum, item) => sum + points(item.score), 0); }
+export function arrowAverage(arrows: ArrowEntry[]) { return arrows.length === 0 ? null : roundTotal(arrows) / arrows.length; }
 export function endTotal(arrows: ArrowEntry[], end: number) { return roundTotal(arrows.filter((item) => item.end === end)); }
 export function xCount(arrows: ArrowEntry[]) { return arrows.filter((item) => item.score === "X").length; }
 export function arrowKey(end: number, arrow: number) { return `${end}-${arrow}`; }

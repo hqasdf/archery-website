@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { validateArrowInput, validateRoundInput, validateSessionArrowCount, validateSessionInput } from "../src/features/sessions/validation.ts";
+import { arrowAverage } from "../src/features/sessions/scoring-model.ts";
 
 const id="123e4567-e89b-42d3-a456-426614174000";
 
@@ -32,6 +33,11 @@ test("Arrow input converts X, 10 and Miss without changing plots",()=>{
   const x=validateArrowInput({...base,score:"X"}); assert.equal(x.ok,true); assert.equal(x.value.scorePoints,10); assert.equal(x.value.isX,true); assert.deepEqual(x.value.plot,base.plot);
   const ten=validateArrowInput({...base,score:"10"}); assert.equal(ten.value.scorePoints,10); assert.equal(ten.value.isX,false);
   const miss=validateArrowInput({...base,score:"M"}); assert.equal(miss.value.scorePoints,0); assert.equal(miss.value.isX,false);
+});
+
+test("Arrow average derives from entered Arrow scores and counts X as ten",()=>{
+  assert.equal(arrowAverage([]),null);
+  assert.equal(arrowAverage([{id:"1",end:1,arrow:1,score:"X",plot:null},{id:"2",end:1,arrow:2,score:"8",plot:null},{id:"3",end:1,arrow:3,score:"M",plot:null}]),6);
 });
 
 test("Arrow input rejects malformed positions and identifiers",()=>{

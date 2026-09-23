@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { removeArrow as removeArrowAction, saveArrow } from "../actions";
-import { SCORE_LABELS, arrowKey, endTotal, points, roundTotal, scoreFromPlot, xCount, type ArrowEntry, type Plot, type RoundDraft, type ScoreLabel } from "../scoring-model";
+import { SCORE_LABELS, arrowAverage, arrowKey, endTotal, points, roundTotal, scoreFromPlot, xCount, type ArrowEntry, type Plot, type RoundDraft, type ScoreLabel } from "../scoring-model";
 import { TargetFace } from "./target-face";
 import styles from "./sessions.module.css";
 
@@ -43,7 +43,7 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
     <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={onBack}>← Session</button><p>{sessionTitle} · {sessionDate}</p></div>
     <div className={styles.scoreHeading}><div><p className={styles.kicker}>{round.division} · {round.distanceMetres} m · {faceLabel(round.faceType,round.faceDiameterCm)}</p><h2 id="scoring-title">{round.name}</h2></div><div className={styles.current}><span>Current</span><strong>End {slot.end} · Arrow {slot.arrow}</strong></div></div>
     {saveMessage&&<p className={styles.saveError} role="alert">{saveMessage} Select the Arrow and retry.</p>}
-    <div className={styles.totals}><div><span>End {slot.end}</span><strong>{endTotal(round.arrows,slot.end)}</strong></div><div><span>Round</span><strong>{roundTotal(round.arrows)}</strong></div><div><span>X count</span><strong>{xCount(round.arrows)}</strong></div><div><span>Entered</span><strong>{round.arrows.length}/{round.ends*round.arrowsPerEnd}</strong></div></div>
+    <div className={styles.totals}><div><span>End {slot.end}</span><strong>{endTotal(round.arrows,slot.end)}</strong></div><div><span>Round</span><strong>{roundTotal(round.arrows)}</strong></div><div><span>Arrow avg.</span><strong>{formatArrowAverage(round.arrows)}</strong></div><div><span>X count</span><strong>{xCount(round.arrows)}</strong></div><div><span>Entered</span><strong>{round.arrows.length}/{round.ends*round.arrowsPerEnd}</strong></div></div>
     <div className={styles.scoringGrid}>
       <TargetFace arrows={round.arrows} selectedId={selected?.id??null} faceType={round.faceType} onPlot={handleTarget}/>
       <div className={styles.entryPanel}>
@@ -58,3 +58,4 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
   </section>;
 }
 function faceLabel(faceType:RoundDraft["faceType"],diameter:number) { return faceType==="triple_face"?`${diameter} cm triple face`:faceType==="six_ring"?`${diameter} cm 6-ring face`:`${diameter} cm full face`; }
+function formatArrowAverage(arrows:ArrowEntry[]) { const average=arrowAverage(arrows); return average === null ? "—" : average.toFixed(1); }
