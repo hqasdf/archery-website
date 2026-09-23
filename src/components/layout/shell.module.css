@@ -131,8 +131,8 @@
   .navLink {
     flex: 1;
     gap: 5px;
-    padding: 10px 8px;
-    font-size: 0.85rem;
+    padding: 10px 5px;
+    font-size: 0.79rem;
   }
   .main {
     padding: 30px 20px 40px;
@@ -141,5 +141,16 @@
     width: calc(100% - 40px);
     flex-direction: column;
     gap: 6px;
+  }
+}
+@media (max-width: 350px) {
+  .navLink {
+    gap: 3px;
+    padding-inline: 3px;
+    font-size: 0.73rem;
+  }
+  .navLink svg {
+    width: 15px;
+    height: 15px;
   }
 }

@@ -8,6 +8,7 @@ import styles from "./shell.module.css";
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/sessions", label: "Sessions", icon: "sessions" },
+  { href: "/analytics", label: "Analytics", icon: "analytics" },
   { href: "/profile", label: "Profile", icon: "profile" },
 ] as const;
 
