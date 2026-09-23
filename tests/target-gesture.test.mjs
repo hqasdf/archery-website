@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { calculatePinchTransform, clientToSvg, inverseTargetTransform, plotFromSvg, shouldCommitTargetTap } from "../src/features/sessions/target-gesture.ts";
+import { calculatePinchTransform, clientToSvg, inverseTargetTransform, plotFromSvg, resolveTargetTapIntent, shouldCommitTargetTap } from "../src/features/sessions/target-gesture.ts";
 
 test("client coordinates map to SVG coordinates and invert target zoom", () => {
   const svg = clientToSvg({ x: 150, y: 100 }, { left: 50, top: 50, width: 200, height: 100 }, { x: -100, y: -50, width: 200, height: 100 });
@@ -26,4 +26,13 @@ test("only an unmoved single-pointer interaction commits a plot", () => {
   assert.equal(shouldCommitTargetTap({ moved: false, hadMultiTouch: true, suppressed: false, pointerCount: 1 }), false);
   assert.equal(shouldCommitTargetTap({ moved: false, hadMultiTouch: false, suppressed: true, pointerCount: 1 }), false);
   assert.equal(shouldCommitTargetTap({ moved: true, hadMultiTouch: false, suppressed: false, pointerCount: 1 }), false);
+});
+
+test("one pointer session resolves to one intent and preserves new-vs-existing behavior", () => {
+  assert.equal(resolveTargetTapIntent({ arrowId: null, moved: false, hadMultiTouch: false, suppressed: false, pointerCount: 1 }), "plot");
+  assert.equal(resolveTargetTapIntent({ arrowId: "arrow-1", moved: false, hadMultiTouch: false, suppressed: false, pointerCount: 1 }), "select");
+  assert.equal(resolveTargetTapIntent({ arrowId: "arrow-1", moved: true, hadMultiTouch: false, suppressed: false, pointerCount: 1 }), "plot");
+  assert.equal(resolveTargetTapIntent({ arrowId: null, moved: true, hadMultiTouch: false, suppressed: false, pointerCount: 1 }), null);
+  assert.equal(resolveTargetTapIntent({ arrowId: null, moved: false, hadMultiTouch: true, suppressed: false, pointerCount: 1 }), null);
+  assert.equal(resolveTargetTapIntent({ arrowId: "arrow-1", moved: false, hadMultiTouch: false, suppressed: true, pointerCount: 1 }), null);
 });

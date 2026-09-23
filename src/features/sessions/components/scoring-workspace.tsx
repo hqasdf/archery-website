@@ -14,6 +14,7 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
   const selected=round.arrows.find((item)=>item.end===slot.end&&item.arrow===slot.arrow)??null;
 
   function chooseSlot(next:{end:number;arrow:number}) { setCorrectionOpen(false); setSlot(next); }
+  function selectArrowById(arrowId:string) { const arrow=round.arrows.find((item)=>item.id===arrowId); if (arrow) chooseSlot({end:arrow.end,arrow:arrow.arrow}); }
   function selectNext(arrows:ArrowEntry[]) {
     const total=round.ends*round.arrowsPerEnd,current=(slot.end-1)*round.arrowsPerEnd+(slot.arrow-1);
     for (let offset=1;offset<=total;offset++) { const index=(current+offset)%total,end=Math.floor(index/round.arrowsPerEnd)+1,arrow=index%round.arrowsPerEnd+1; if (!arrows.some((item)=>item.end===end&&item.arrow===arrow)) { chooseSlot({end,arrow}); return; } }
@@ -46,7 +47,7 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
     {saveMessage&&<p className={styles.saveError} role="alert">{saveMessage} Select the Arrow and retry.</p>}
     <div className={styles.totals}><div><span>End {slot.end}</span><strong>{endTotal(round.arrows,slot.end)}</strong></div><div><span>Round</span><strong>{roundTotal(round.arrows)}</strong></div><div><span>Arrow avg.</span><strong>{formatArrowAverage(round.arrows)}</strong></div><div><span>X count</span><strong>{xCount(round.arrows)}</strong></div><div><span>Entered</span><strong>{round.arrows.length}/{round.ends*round.arrowsPerEnd}</strong></div></div>
     <div className={styles.scoringGrid}>
-      <TargetFace arrows={round.arrows} selectedId={selected?.id??null} faceType={round.faceType} onPlot={handleTarget}/>
+      <TargetFace arrows={round.arrows} selectedId={selected?.id??null} currentEnd={slot.end} faceType={round.faceType} faceDiameterCm={round.faceDiameterCm} onPlot={handleTarget} onSelect={selectArrowById}/>
       <div className={styles.entryPanel}>
         <div className={styles.entryHeading}><div><p className={styles.kicker}>{selected?"Selected arrow":"Ready to score"}</p><h3>End {slot.end} · Arrow {slot.arrow}</h3></div><strong className={styles.selectedScore}>{selected?.score??"—"}</strong></div>
         <p className={styles.entryHint}>{selected?"Move its marker on the target, or correct only its recorded score.":"Tap the target to record the score and advance automatically."}</p>

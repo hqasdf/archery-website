@@ -28,3 +28,18 @@ export function calculatePinchTransform(start: TargetTransform, startMidpoint: T
 export function shouldCommitTargetTap(input: { moved: boolean; hadMultiTouch: boolean; suppressed: boolean; pointerCount: number }) {
   return !input.moved && !input.hadMultiTouch && !input.suppressed && input.pointerCount === 1;
 }
+
+export type TargetTapIntent = "plot" | "select";
+
+/** Resolve one completed pointer session to one and only one target intent. */
+export function resolveTargetTapIntent(input: {
+  arrowId: string | null;
+  moved: boolean;
+  hadMultiTouch: boolean;
+  suppressed: boolean;
+  pointerCount: number;
+}): TargetTapIntent | null {
+  if (input.hadMultiTouch || input.suppressed || input.pointerCount !== 1) return null;
+  if (input.arrowId) return input.moved ? "plot" : "select";
+  return input.moved ? null : "plot";
+}
