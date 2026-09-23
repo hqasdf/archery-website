@@ -3,6 +3,7 @@ import type { ArrowEntry, RoundDraft, SessionDraft, SessionType, TargetFaceType 
 
 export type AnalyticsSessionType = SessionType | "all";
 export type AnalyticsDateRange = "7" | "30" | "all";
+export type VolumeInterval = "daily" | "weekly";
 export type AnalyticsFilters = {
   sessionType: AnalyticsSessionType;
   dateRange: AnalyticsDateRange;
@@ -50,6 +51,12 @@ export type TargetGrouping = {
   arrows: GroupingArrow[];
   missingPlotCount: number;
   unassignedTripleCount: number;
+};
+export type ArrowVolumePoint = {
+  key: string;
+  startDate: string;
+  endDate: string;
+  arrowCount: number;
 };
 
 export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFilters = {
@@ -180,6 +187,41 @@ export function calculateTargetGroupings(rounds: AnalyticsRound[]): TargetGroupi
   });
 }
 
+export function calculateArrowVolume(
+  sessions: SessionDraft[],
+  filters: Pick<AnalyticsFilters, "sessionType" | "dateRange">,
+  today: string,
+  interval: VolumeInterval,
+): ArrowVolumePoint[] {
+  const groups = new Map<string, ArrowVolumePoint>();
+  for (const session of sessions) {
+    if (!matchesSessionPrimaryFilters(session, filters, today)) continue;
+    const arrowCount = session.arrowCount;
+    if (arrowCount === 0) continue;
+    const startDate = interval === "daily" ? session.date : startOfWeek(session.date);
+    const endDate = interval === "daily" ? session.date : shiftDate(startDate, 6);
+    const current = groups.get(startDate);
+    if (current) current.arrowCount += arrowCount;
+    else groups.set(startDate, { key: startDate, startDate, endDate, arrowCount });
+  }
+  return [...groups.values()].sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
+const shortMonthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+
+export function formatAnalyticsDate(value: string, includeYear = true) {
+  const { day, month, year } = dateParts(value);
+  const formatted = `${day} ${shortMonthNames[month - 1]}`;
+  return includeYear ? `${formatted} ${year}` : formatted;
+}
+
+export function formatAnalyticsWeekRange(startDate: string, endDate: string) {
+  const start = dateParts(startDate);
+  const end = dateParts(endDate);
+  if (start.month === end.month && start.year === end.year) return `${start.day}–${end.day} ${shortMonthNames[end.month - 1]}`;
+  return `${formatAnalyticsDate(startDate, false)}–${formatAnalyticsDate(endDate, false)}`;
+}
+
 function flattenRounds(sessions: SessionDraft[]): AnalyticsRound[] {
   return sessions.flatMap((session) => session.rounds.map((round) => ({
     sessionId: session.id,
@@ -191,17 +233,32 @@ function flattenRounds(sessions: SessionDraft[]): AnalyticsRound[] {
 }
 
 function matchesPrimaryFilters(item: AnalyticsRound, filters: Pick<AnalyticsFilters, "sessionType" | "dateRange">, today: string) {
-  if (filters.sessionType !== "all" && item.sessionType !== filters.sessionType) return false;
+  return matchesSessionPrimaryFilters(item, filters, today);
+}
+
+function matchesSessionPrimaryFilters(session: Pick<SessionDraft, "sessionType" | "date">, filters: Pick<AnalyticsFilters, "sessionType" | "dateRange">, today: string) {
+  if (filters.sessionType !== "all" && session.sessionType !== filters.sessionType) return false;
   if (filters.dateRange === "all") return true;
   const days = filters.dateRange === "7" ? 6 : 29;
   const cutoff = shiftDate(today, -days);
-  return item.date >= cutoff && item.date <= today;
+  return session.date >= cutoff && session.date <= today;
+}
+
+function dateParts(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return { year, month, day };
 }
 
 function shiftDate(value: string, days: number) {
   const date = new Date(`${value}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+function startOfWeek(value: string) {
+  const date = new Date(`${value}T00:00:00Z`);
+  const daysAfterMonday = (date.getUTCDay() + 6) % 7;
+  return shiftDate(value, -daysAfterMonday);
 }
 
 function totalPoints(arrows: ArrowEntry[]) {

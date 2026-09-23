@@ -28,7 +28,7 @@ export function AnalyticsTargetGrouping({ groups }: { groups: TargetGrouping[] }
         {active.faceType === "triple_face" ? tripleCentres.map((cy) => <Face key={cy} cy={cy} radii={tripleRings}/>) : <Face cy={0} radii={active.faceType === "six_ring" ? sixRings : fullRings}/>} 
         {active.arrows.map((arrow) => {
           const cy = active.faceType === "triple_face" ? tripleCentres[arrow.faceIndex ?? 1] : 0;
-          return <circle key={arrow.id} cx={arrow.x * 100} cy={cy + arrow.y * 100} r="3.2" className={styles.groupingMarker}><title>{arrow.score} · x {arrow.x.toFixed(2)}, y {arrow.y.toFixed(2)}</title></circle>;
+          return <circle key={arrow.id} cx={arrow.x * 100} cy={cy + arrow.y * 100} r="3.2" className={styles.groupingMarker}/>;
         })}
       </svg>
     </div>}
