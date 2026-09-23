@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { SessionDraft } from "@/features/sessions/scoring-model";
 import { calculateArrowVolume, calculateDistancePerformance, calculateOverview, calculateTargetGroupings, calculateTrend, DEFAULT_ANALYTICS_FILTERS, filterAnalyticsRounds, formatAnalyticsDate, formatAnalyticsWeekRange, getAvailableFilters, type AnalyticsDateRange, type AnalyticsFilters, type AnalyticsSessionType, type ArrowVolumePoint, type TrendPoint, type VolumeInterval } from "../analytics-model";
 import { AnalyticsTargetGrouping } from "./analytics-target-grouping";
+import { AdvancedInsights } from "./advanced-insights";
 import styles from "./analytics.module.css";
 
 const sessionTypes: { value: AnalyticsSessionType; label: string }[] = [{ value: "training", label: "Training" }, { value: "competition", label: "Competition" }, { value: "all", label: "All" }];
@@ -60,6 +61,7 @@ export function AnalyticsWorkspace({ sessions, today }: { sessions: SessionDraft
       <div className={styles.volumeHeading}><SectionHeading eyebrow="Session-level activity" heading="Arrow volume" id="volume-heading"/><div className={styles.volumeToggle} role="group" aria-label="Arrow count interval"><button type="button" aria-pressed={volumeInterval === "daily"} onClick={() => setVolumeInterval("daily")}>Daily</button><button type="button" aria-pressed={volumeInterval === "weekly"} onClick={() => setVolumeInterval("weekly")}>Weekly</button></div></div>
       <div className={styles.panel}>{volume.length === 0 ? <EmptyState title="No Session Arrow volume in this view" body="The chart will appear after matching Sessions have an Arrow count."/> : <VolumeChart points={volume} interval={volumeInterval}/>}</div>
     </section>
+    <AdvancedInsights sessions={sessions} filters={filters} today={today}/>
   </div>;
 }
 

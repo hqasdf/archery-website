@@ -1,5 +1,6 @@
 import type { Division } from "../sessions/round-presets.ts";
 import type { ArrowEntry, RoundDraft, SessionDraft, SessionType, TargetFaceType } from "../sessions/scoring-model.ts";
+import { calculateGroupingMetrics } from "../sessions/session-insights-model.ts";
 
 export type AnalyticsSessionType = SessionType | "all";
 export type AnalyticsDateRange = "7" | "30" | "all";
@@ -52,6 +53,8 @@ export type TargetGrouping = {
   missingPlotCount: number;
   unassignedTripleCount: number;
 };
+export type ComparisonMetric = { average: number | null; xPercentage: number | null; tenPlusXPercentage: number | null; arrowCount: number; spread: number | null; plottedArrowCount: number };
+export type TrainingCompetitionComparison = { training: ComparisonMetric; competition: ComparisonMetric; context: string; groupingContext: string };
 export type ArrowVolumePoint = {
   key: string;
   startDate: string;
@@ -187,6 +190,23 @@ export function calculateTargetGroupings(rounds: AnalyticsRound[]): TargetGroupi
   });
 }
 
+export function filterComparisonRounds(sessions: SessionDraft[], filters: AnalyticsFilters, today: string) {
+  return filterAnalyticsRounds(sessions, { ...filters, sessionType: "all" }, today);
+}
+
+export function calculateTrainingCompetitionComparison(rounds: AnalyticsRound[]): TrainingCompetitionComparison {
+  const trainingRounds = rounds.filter((item) => item.sessionType === "training");
+  const competitionRounds = rounds.filter((item) => item.sessionType === "competition");
+  const formats = new Set(rounds.map((item) => `${item.round.distanceMetres} m · ${item.round.division} · ${targetFaceLabel(item.round)}`));
+  const faceTypes = new Set(rounds.map((item) => item.round.faceType));
+  return {
+    training: comparisonMetric(trainingRounds, faceTypes.size === 1),
+    competition: comparisonMetric(competitionRounds, faceTypes.size === 1),
+    context: formats.size === 1 ? [...formats][0] : "Comparison includes mixed formats",
+    groupingContext: faceTypes.size === 1 ? "Grouping spread uses all plotted Arrows in each Session type." : "Grouping spread is unavailable when target layouts are mixed.",
+  };
+}
+
 export function calculateArrowVolume(
   sessions: SessionDraft[],
   filters: Pick<AnalyticsFilters, "sessionType" | "dateRange">,
@@ -271,4 +291,13 @@ function scorePoints(score: ArrowEntry["score"]) {
 
 function compareBestRound(a: BestRound, b: BestRound) {
   return a.average - b.average || a.arrowCount - b.arrowCount || a.total - b.total || a.date.localeCompare(b.date);
+}
+
+function comparisonMetric(rounds: AnalyticsRound[], allowSpread: boolean): ComparisonMetric {
+  const arrows = rounds.flatMap((item) => item.round.arrows);
+  const plotted = rounds.flatMap((item) => item.round.arrows.flatMap((arrow) => arrow.plot && (item.round.faceType !== "triple_face" || arrow.plot.faceIndex !== undefined) ? [{ x: arrow.plot.x, y: arrow.plot.y }] : []));
+  const total = totalPoints(arrows);
+  const xCount = arrows.filter((arrow) => arrow.score === "X").length;
+  const tenPlusXCount = arrows.filter((arrow) => scorePoints(arrow.score) === 10).length;
+  return { average: arrows.length ? total / arrows.length : null, xPercentage: arrows.length ? xCount / arrows.length * 100 : null, tenPlusXPercentage: arrows.length ? tenPlusXCount / arrows.length * 100 : null, arrowCount: arrows.length, spread: allowSpread ? calculateGroupingMetrics(plotted)?.spreadNormalized ?? null : null, plottedArrowCount: plotted.length };
 }

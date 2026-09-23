@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { calculateArrowVolume, calculateDistancePerformance, calculateOverview, calculateTargetGroupings, calculateTrend, filterAnalyticsRounds, formatAnalyticsDate, formatAnalyticsWeekRange, getAvailableFilters } from "../src/features/analytics/analytics-model.ts";
+import { calculateArrowVolume, calculateDistancePerformance, calculateOverview, calculateTargetGroupings, calculateTrainingCompetitionComparison, calculateTrend, filterAnalyticsRounds, filterComparisonRounds, formatAnalyticsDate, formatAnalyticsWeekRange, getAvailableFilters } from "../src/features/analytics/analytics-model.ts";
 
 function arrow(id, score, plot = null) { return { id, end: 1, arrow: Number(id.replace(/\D/g, "")) || 1, score, plot, syncState: "saved" }; }
 function round(id, overrides = {}) { return { id, roundNumber: 1, name: id, division: "Recurve", distanceMetres: 70, ends: 1, arrowsPerEnd: 3, faceDiameterCm: 122, faceType: "full_face", arrows: [], ...overrides }; }
@@ -104,4 +104,15 @@ test("Analytics date labels are deterministic across server and browser runtimes
   assert.equal(formatAnalyticsDate("2026-09-22", false), "22 Sep");
   assert.equal(formatAnalyticsWeekRange("2026-09-21", "2026-09-27"), "21–27 Sep");
   assert.equal(formatAnalyticsWeekRange("2026-09-28", "2026-10-04"), "28 Sep–4 Oct");
+});
+
+test("Training vs Competition uses both types under the same format filters", () => {
+  const selected = filterComparisonRounds(sessions, { ...allFilters, sessionType: "training", distance: 50 }, "2026-09-23");
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].sessionType, "competition");
+  const mixed = calculateTrainingCompetitionComparison(filterComparisonRounds(sessions, { ...allFilters, sessionType: "training" }, "2026-09-23"));
+  assert.equal(mixed.context, "Comparison includes mixed formats");
+  assert.equal(mixed.training.arrowCount, 6);
+  assert.equal(mixed.competition.arrowCount, 3);
+  assert.equal(mixed.training.spread, null);
 });

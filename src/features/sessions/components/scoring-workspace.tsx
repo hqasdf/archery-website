@@ -3,6 +3,7 @@ import { useState } from "react";
 import { removeArrow as removeArrowAction, saveArrow } from "../actions";
 import { SCORE_LABELS, arrowAverage, arrowKey, endTotal, points, roundTotal, scoreFromPlot, xCount, type ArrowEntry, type Plot, type RoundDraft, type ScoreLabel } from "../scoring-model";
 import { TargetFace } from "./target-face";
+import { RoundInsights } from "./session-insights";
 import styles from "./sessions.module.css";
 
 export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack}:{sessionTitle:string;sessionDate:string;round:RoundDraft;onChange:(update:(round:RoundDraft)=>RoundDraft)=>void;onBack:()=>void}) {
@@ -55,6 +56,7 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
       </div>
     </div>
     <div className={styles.roundLog}><h3>Arrows entered</h3>{round.arrows.length===0?<p>No arrows yet. Tap the target to score the first arrow.</p>:<div className={styles.logGrid}>{[...round.arrows].sort((a,b)=>a.end-b.end||a.arrow-b.arrow).map((item)=><button type="button" key={`${item.end}-${item.arrow}`} onClick={()=>chooseSlot({end:item.end,arrow:item.arrow})} className={selected?.end===item.end&&selected.arrow===item.arrow?styles.logItemActive:styles.logItem}><span>E{item.end} · A{item.arrow}</span><strong>{item.score}</strong><small>{item.syncState==="saving"?"Saving…":item.syncState==="failed"?"Not saved · Retry":"Saved"}{item.plot?" · plotted":""} · {points(item.score)} pts</small></button>)}</div>}</div>
+    <RoundInsights round={round}/>
   </section>;
 }
 function faceLabel(faceType:RoundDraft["faceType"],diameter:number) { return faceType==="triple_face"?`${diameter} cm triple face`:faceType==="six_ring"?`${diameter} cm 6-ring face`:`${diameter} cm full face`; }
