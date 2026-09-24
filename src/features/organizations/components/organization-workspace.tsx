@@ -60,14 +60,24 @@ export function OrganizationWorkspace({ organizations }: { organizations: OwnOrg
       <h2>Your organisations</h2>
       {organizations.length === 0 ? <p>You have not joined an organisation yet.</p> :
         <ul className={styles.organizationList}>{organizations.map((item) => <li key={item.id}>
-          <div><strong>{item.name}</strong><span>{item.role === "head_coach" ? "Head Coach" : "Archer"} · Active</span></div>
-          {item.role === "head_coach" && item.joinCode && <div className={styles.joinCode}>
-            <label><span>Join code</span><input readOnly value={item.joinCode} onFocus={(event) => event.target.select()}/></label>
-            <button type="button" onClick={() => handleCopy(item.joinCode!)}>Copy</button>
-            <button type="button" disabled={pending} onClick={() => handleRegenerate(item)}>Regenerate</button>
+          <div className={styles.organizationIdentity}><strong>{item.name}</strong><span>{item.role === "head_coach" ? "Head Coach" : "Archer"} · Active</span></div>
+          {item.role === "head_coach" && <div className={styles.coachCards}>
+            <section className={`${styles.coachCard} ${styles.dashboardCard}`}>
+              <h3>Coach Dashboard</h3>
+              <p>View athlete progress, recent sessions, and performance insights.</p>
+              <Link className={styles.coachCta} href={`/organization/${item.id}`}>Open Coach Dashboard</Link>
+            </section>
+            {item.joinCode && <section className={styles.coachCard}>
+              <h3>Organisation Join Code</h3>
+              <p>Share this code with athletes so they can join your organisation.</p>
+              <label className={styles.codeLabel}><span>Join code</span><input readOnly value={item.joinCode} onFocus={(event) => event.target.select()}/></label>
+              <div className={styles.codeActions}>
+                <button type="button" onClick={() => handleCopy(item.joinCode!)}>Copy Code</button>
+                <button type="button" disabled={pending} onClick={() => handleRegenerate(item)}>Generate New Code</button>
+              </div>
+            </section>}
           </div>}
           <div className={styles.organizationActions}>
-            {item.role === "head_coach" && <Link href={`/organization/${item.id}`}>Coach Dashboard</Link>}
             <button type="button" disabled={pending} onClick={() => handleLeave(item)}>Leave</button>
           </div>
         </li>)}</ul>}
