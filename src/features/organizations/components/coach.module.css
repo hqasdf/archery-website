@@ -7,7 +7,7 @@
 .back:focus-visible,.athleteLink:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}
 .overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
 .overview>div,.groupingNumbers>div{display:grid;align-content:center;gap:3px;min-width:0;min-height:92px;padding:15px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-sm)}
-.overview strong,.groupingNumbers strong{font-size:clamp(1.25rem,4vw,1.75rem);font-variant-numeric:tabular-nums}
+.overview strong,.groupingNumbers strong{font-size:clamp(1.25rem,4vw,1.75rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .overview span,.groupingNumbers span{color:var(--color-muted);font-size:.83rem}
 .section{min-width:0;padding:18px 20px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md)}
 .section h2{margin:0 0 12px;font-size:1.2rem}
@@ -23,9 +23,9 @@
 .recordList li>div{display:grid;gap:4px;min-width:0}
 .recordList li>div:last-child{text-align:right}
 .volumeList{display:grid;gap:10px}
-.volumeList li{display:grid;grid-template-columns:105px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:.84rem}
+.volumeList li{display:grid;grid-template-columns:105px minmax(0,1fr) max-content;gap:10px;align-items:center;font-size:.84rem}
 .volumeList strong{text-align:right;font-variant-numeric:tabular-nums}
 .volumeTrack{height:10px;border-radius:999px;background:var(--color-soft);overflow:hidden}
 .volumeTrack span{display:block;height:100%;border-radius:inherit;background:var(--color-primary)}
 .groupingNumbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media(max-width:640px){.workspace{gap:14px}.section{padding:16px}.overview{grid-template-columns:repeat(2,minmax(0,1fr))}.overview>div:last-child:nth-child(odd){grid-column:1/-1}.recordList li{display:grid;gap:5px}.recordList li>div:last-child{text-align:left}.volumeList li{grid-template-columns:78px minmax(0,1fr) 34px;gap:7px}}
+@media(max-width:640px){.workspace{gap:14px}.section{padding:16px}.overview{grid-template-columns:repeat(2,minmax(0,1fr))}.overview>div:last-child:nth-child(odd){grid-column:1/-1}.recordList li{display:grid;gap:5px}.recordList li>div:last-child{text-align:left}.volumeList li{grid-template-columns:78px minmax(0,1fr) max-content;gap:7px}}
