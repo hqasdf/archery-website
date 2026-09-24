@@ -1,16 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type FormEvent, type WheelEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type UIEvent, type WheelEvent } from "react";
 import { addArrows, COUNTER_STORAGE_KEY, DEFAULT_COUNTER, readCounter, resetCounter, setIncrement, undoLastAddition, type ArrowCounterState } from "../counter-model";
 import styles from "./arrow-counter.module.css";
 
 export function ArrowCounter() {
   const [counter, setCounter] = useState<ArrowCounterState>(DEFAULT_COUNTER);
   const [ready, setReady] = useState(false);
+  const [previewIncrement, setPreviewIncrement] = useState(DEFAULT_COUNTER.increment);
   const [incrementInput, setIncrementInput] = useState(String(DEFAULT_COUNTER.increment));
   const [confirmReset, setConfirmReset] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewRef = useRef(DEFAULT_COUNTER.increment);
+  const wheelRemainder = useRef(0);
+  const wheelStart = Math.max(1, counter.increment - 20);
+  const wheelValues = Array.from({ length: 41 }, (_, index) => wheelStart + index);
+
+  useLayoutEffect(() => {
+    const selector = selectorRef.current;
+    if (!selector) return;
+    const selected = selector.querySelector<HTMLElement>(`[data-increment="${counter.increment}"]`);
+    if (selected) selector.scrollTop += selected.getBoundingClientRect().top + selected.offsetHeight / 2 - (selector.getBoundingClientRect().top + selector.clientHeight / 2);
+  }, [counter.increment, ready]);
+
+  useEffect(() => () => { if (settleTimer.current) clearTimeout(settleTimer.current); }, []);
 
   useEffect(() => {
     let active = true;
@@ -30,6 +46,8 @@ export function ArrowCounter() {
         setMessage("This browser could not load the saved counter.");
       }
       setCounter(stored);
+      setPreviewIncrement(stored.increment);
+      previewRef.current = stored.increment;
       setIncrementInput(String(stored.increment));
       setReady(true);
     });
@@ -38,6 +56,8 @@ export function ArrowCounter() {
 
   function apply(next: ArrowCounterState) {
     setCounter(next);
+    setPreviewIncrement(next.increment);
+    previewRef.current = next.increment;
     setMessage(null);
     try {
       window.localStorage.setItem(COUNTER_STORAGE_KEY, JSON.stringify(next));
@@ -72,12 +92,50 @@ export function ArrowCounter() {
     chooseIncrement(Math.max(1, counter.increment + amount));
   }
 
-  function handleWheel(event: WheelEvent<HTMLDivElement>) {
-    event.preventDefault();
-    adjustIncrement(event.deltaY > 0 ? -1 : 1);
+  function handleSelectorScroll(event: UIEvent<HTMLDivElement>) {
+    const selector = event.currentTarget;
+    const firstRow = selector.querySelector<HTMLElement>("[data-increment]");
+    if (!firstRow) return;
+    const center = selector.getBoundingClientRect().top + selector.clientHeight / 2;
+    const firstCenter = firstRow.getBoundingClientRect().top + firstRow.offsetHeight / 2;
+    const value = Number(firstRow.dataset.increment) + Math.round((center - firstCenter) / firstRow.offsetHeight);
+    if (Number.isSafeInteger(value) && value > 0) {
+      if (previewRef.current !== value) {
+        previewRef.current = value;
+        setPreviewIncrement(value);
+        if (window.matchMedia("(pointer: coarse)").matches && typeof navigator.vibrate === "function") {
+          try { navigator.vibrate(8); } catch { /* Haptics are optional and browser-controlled. */ }
+        }
+      }
+      if (document.activeElement !== document.getElementById("arrow-increment")) setIncrementInput(String(value));
+    }
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => {
+      if (Number.isSafeInteger(value) && value > 0 && value !== counter.increment) chooseIncrement(value);
+    }, 70);
   }
 
-  const nearbyValues = [...new Set([-2, -1, 1, 2].map((offset) => Math.max(1, counter.increment + offset)))];
+  function handleSelectorWheel(event: WheelEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const selector = event.currentTarget;
+    if (event.deltaMode !== 0) {
+      wheelRemainder.current = 0;
+      selector.scrollTop += Math.sign(event.deltaY) * 42;
+      return;
+    }
+    wheelRemainder.current += event.deltaY;
+    if (Math.abs(wheelRemainder.current) >= 42) {
+      selector.scrollTop += Math.sign(wheelRemainder.current) * 42;
+      wheelRemainder.current = 0;
+    }
+  }
+
+  function handleSelectorKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault();
+      adjustIncrement(event.key === "ArrowUp" ? 1 : -1);
+    }
+  }
 
   return <section className={styles.counter} aria-label="Arrow Counter">
     <h1 className={styles.srOnly}>Arrow Counter</h1>
@@ -94,20 +152,21 @@ export function ArrowCounter() {
         <span className={styles.totalLabel}>TOTAL</span>
         <strong className={styles.total}>{counter.totalArrows}</strong>
       </div>
-      <div className={styles.selector} onWheel={handleWheel} aria-label="Addition amount selector">
-        {nearbyValues.filter((value) => value < counter.increment).sort((a,b)=>b-a).map((value) => <button key={`before-${value}`} type="button" className={styles.nearby} onClick={() => chooseIncrement(value)}>+{value}</button>)}
-        <form className={styles.selectedIncrement} onSubmit={submitIncrement}>
-          <button type="button" aria-label="Decrease addition amount" onClick={() => adjustIncrement(-1)}>−</button>
-          <label className={styles.srOnly} htmlFor="arrow-increment">Selected addition amount</label>
-          <input id="arrow-increment" type="text" inputMode="numeric" pattern="[0-9]*" value={incrementInput} disabled={!ready} onChange={(event) => editIncrement(event.target.value)} onBlur={() => setIncrementInput(String(counter.increment))}/>
-          <button type="button" aria-label="Increase addition amount" onClick={() => adjustIncrement(1)}>+</button>
-        </form>
-        {nearbyValues.filter((value) => value > counter.increment).sort((a,b)=>a-b).map((value) => <button key={`after-${value}`} type="button" className={styles.nearby} onClick={() => chooseIncrement(value)}>+{value}</button>)}
+      <div className={styles.selectorShell}>
+      <div ref={selectorRef} className={styles.selector} onScroll={handleSelectorScroll} onWheel={handleSelectorWheel} onKeyDown={handleSelectorKeyDown} role="spinbutton" aria-label="Arrow increment selector" aria-valuemin={1} aria-valuenow={previewIncrement} tabIndex={0}>
+        <div className={styles.wheelSpacer} aria-hidden="true" />
+        {wheelValues.map((value) => <div key={value} data-increment={value} className={styles.nearby} aria-hidden="true" onClick={() => chooseIncrement(value)}>+{value}</div>)}
+        <div className={styles.wheelSpacer} aria-hidden="true" />
+      </div>
+      <form className={styles.selectedIncrement} onSubmit={submitIncrement}>
+        <label className={styles.srOnly} htmlFor="arrow-increment">Selected addition amount</label>
+        <span aria-hidden="true">+</span><input id="arrow-increment" type="text" inputMode="numeric" pattern="[0-9]*" value={incrementInput} disabled={!ready} onChange={(event) => editIncrement(event.target.value)} onBlur={() => setIncrementInput(String(counter.increment))}/>
+      </form>
       </div>
     </div>
 
-    <button className={styles.clicker} type="button" aria-label={`Add ${counter.increment} arrows`} disabled={!ready || counter.totalArrows > Number.MAX_SAFE_INTEGER - counter.increment} onClick={() => apply(addArrows(counter))}>
-      <Icon name="up"/><span>+{counter.increment}</span>
+    <button className={styles.clicker} type="button" aria-label={`Add ${previewIncrement} arrows`} disabled={!ready || counter.totalArrows > Number.MAX_SAFE_INTEGER - previewIncrement} onClick={() => apply(addArrows({ ...counter, increment: previewIncrement }))}>
+      <Icon name="up"/><span>+{previewIncrement}</span>
     </button>
     {message && <p className={styles.message} role="alert">{message}</p>}
 
