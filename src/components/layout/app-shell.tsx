@@ -32,9 +32,9 @@ export function AppShell({
               <span className={styles.brandCaption}>Archery Performance Tracker</span>
             </span>
           </Link>
-          <Navigation />
+          <Navigation authenticated={authenticated} />
           {authenticated ? (
-            <SignOutButton />
+            <div className={styles.desktopSignOut}><SignOutButton /></div>
           ) : (
             <Link href="/sign-in" className={styles.preview}>
               Sign in
