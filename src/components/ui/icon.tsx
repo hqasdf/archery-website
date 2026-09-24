@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-type IconName = "arrow" | "dashboard" | "sessions" | "analytics" | "target" | "check" | "profile";
+type IconName = "arrow" | "dashboard" | "sessions" | "analytics" | "target" | "check" | "profile" | "organization";
 
 const paths: Record<IconName, string> = {
   arrow: "M5 12h14m-6-6 6 6-6 6",
@@ -10,6 +10,7 @@ const paths: Record<IconName, string> = {
   target: "M21 12a9 9 0 1 1-9-9m5 9a5 5 0 1 1-5-5m0 5 9-9m-5 0h5v5",
   check: "m5 12 4 4L19 6",
   profile: "M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM4 21v-2a8 8 0 0 1 16 0v2",
+  organization: "M4 20v-9h6v9M14 20v-9h6v9M2 20h20M3 7l9-4 9 4v3H3V7Z",
 };
 
 export function Icon({

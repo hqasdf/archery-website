@@ -45,6 +45,7 @@ export const config = {
     "/sessions/:path*",
     "/arrow-counter/:path*",
     "/profile/:path*",
+    "/organization/:path*",
     "/sign-in",
     "/sign-up",
     "/forgot-password",

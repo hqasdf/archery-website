@@ -1,0 +1,22 @@
+.workspace{display:grid;gap:18px;max-width:760px}
+.panel{padding:24px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface)}
+.panel h2{margin:0 0 8px;font-size:1.25rem}
+.panel>p{margin:0 0 18px;color:var(--color-muted);line-height:1.5}
+.form{display:grid;gap:14px}
+.form label,.joinCode label{display:grid;gap:7px;font-weight:600;font-size:.9rem}
+.form input,.joinCode input{width:100%;min-width:0;min-height:46px;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:white;color:var(--color-text);font:inherit}
+.primary{min-height:46px;width:fit-content;padding:10px 18px;border:0;border-radius:var(--radius-sm);background:var(--color-primary);color:white;font-weight:700;cursor:pointer}
+.primary:disabled,.organizationList button:disabled{opacity:.55;cursor:default}
+.organizationList{list-style:none;padding:0;margin:0}
+.organizationList li{display:grid;gap:12px;padding:13px 0;border-top:1px solid var(--color-border)}
+.organizationList li:first-child{border-top:0}
+.organizationList li>div{display:grid;gap:3px;min-width:0}
+.organizationList strong{overflow-wrap:anywhere}
+.organizationList span{color:var(--color-muted);font-size:.84rem}
+.organizationList button,.joinCode button{min-height:44px;padding:8px 13px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-primary);font-weight:600;cursor:pointer}
+.joinCode{display:flex!important;align-items:end;gap:10px;margin-top:4px}
+.joinCode label{min-width:0;flex:1}
+.message{margin:0;padding:12px 15px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-peach-light);color:var(--color-primary)}
+.organizationList li>.organizationActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.organizationActions a{min-height:44px;display:inline-flex;align-items:center;padding:8px 13px;border-radius:var(--radius-sm);background:var(--color-peach-light);color:var(--color-primary);font-weight:700;text-decoration:none}
+@media(max-width:640px){.panel{padding:19px}.joinCode{align-items:stretch;flex-direction:column}.joinCode button{align-self:flex-start}}

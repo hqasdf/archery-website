@@ -137,7 +137,7 @@ export function ArrowCounter() {
     }
   }
 
-  return <section className={styles.counter} aria-label="Arrow Counter">
+  return <section className={styles.counter} data-arrow-counter-root aria-label="Arrow Counter">
     <h1 className={styles.srOnly}>Arrow Counter</h1>
     <div className={styles.toolbar}>
       <Link href="/sessions" className={styles.back} aria-label="Back to Sessions"><Icon name="back"/></Link>
@@ -155,7 +155,7 @@ export function ArrowCounter() {
       <div className={styles.selectorShell}>
       <div ref={selectorRef} className={styles.selector} onScroll={handleSelectorScroll} onWheel={handleSelectorWheel} onKeyDown={handleSelectorKeyDown} role="spinbutton" aria-label="Arrow increment selector" aria-valuemin={1} aria-valuenow={previewIncrement} tabIndex={0}>
         <div className={styles.wheelSpacer} aria-hidden="true" />
-        {wheelValues.map((value) => <div key={value} data-increment={value} className={styles.nearby} aria-hidden="true" onClick={() => chooseIncrement(value)}>+{value}</div>)}
+        {wheelValues.map((value) => <div key={value} data-increment={value} className={styles.nearby} aria-hidden="true">+{value}</div>)}
         <div className={styles.wheelSpacer} aria-hidden="true" />
       </div>
       <form className={styles.selectedIncrement} onSubmit={submitIncrement}>
