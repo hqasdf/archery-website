@@ -21,6 +21,7 @@ export function SessionsWorkspace({initialSessions}:{initialSessions:SessionDraf
   const [sessionForm,setSessionForm]=useState<{title:string;date:string;sessionType:SessionType}>({title:"",date:today,sessionType:"training"});
   const [selectedPreset,setSelectedPreset]=useState<string|null>(base.id);
   const [roundForm,setRoundForm]=useState<RoundForm>({name:base.name,division:"Recurve",distanceMetres:base.distanceMetres,ends:base.defaultEnds,arrowsPerEnd:base.defaultArrowsPerEnd,faceDiameterCm:base.faceDiameterCm,faceType:base.faceType});
+  const [distanceText,setDistanceText]=useState(String(base.distanceMetres));
   const [pending,setPending]=useState(false);
   const [arrowCountSaving,setArrowCountSaving]=useState(false);
   const [message,setMessage]=useState<string|null>(null);
@@ -30,9 +31,16 @@ export function SessionsWorkspace({initialSessions}:{initialSessions:SessionDraf
   function choosePreset(preset:RoundPreset) {
     const target=defaultTarget(preset.distanceMetres,roundForm.division,{faceDiameterCm:preset.faceDiameterCm,faceType:preset.faceType});
     setSelectedPreset(preset.id==="custom"?null:preset.id);
+    setDistanceText(String(preset.distanceMetres));
     setRoundForm((current)=>({...current,name:preset.name,distanceMetres:preset.distanceMetres,ends:preset.defaultEnds,arrowsPerEnd:preset.defaultArrowsPerEnd,...target}));
   }
   function changeDistance(distanceMetres:number) { setRoundForm((current)=>({...current,distanceMetres,...defaultTarget(distanceMetres,current.division,{faceDiameterCm:current.faceDiameterCm,faceType:current.faceType})})); }
+  function editDistance(value:string) {
+    setDistanceText(value);
+    if (!/^\d+$/.test(value)) return;
+    const distanceMetres=Number(value);
+    if (Number.isSafeInteger(distanceMetres)&&distanceMetres>0&&distanceMetres<=32767) changeDistance(distanceMetres);
+  }
   function changeDivision(division:Division) { setRoundForm((current)=>current.distanceMetres===50&&division==="Compound"?{...current,division,faceDiameterCm:80,faceType:"six_ring"}:{...current,division}); }
   function chooseTargetOption(id:string) { const option=TARGET_FACE_OPTIONS.find((item)=>item.id===id); if (option) setRoundForm((current)=>({...current,faceDiameterCm:option.diameterCm,faceType:option.faceType})); }
 
@@ -43,8 +51,10 @@ export function SessionsWorkspace({initialSessions}:{initialSessions:SessionDraf
     setSessions((current)=>[result.data,...current]); setArrowCountDrafts((current)=>({...current,[result.data.id]:String(result.data.arrowCount)})); setActiveSessionId(result.data.id); setView("session"); setSessionForm({title:"",date:today,sessionType:"training"});
   }
   async function submitRound(event:React.FormEvent) {
-    event.preventDefault(); if (!session) return; setPending(true); setMessage(null);
-    const result=await createRoundWithEnds({sessionId:session.id,roundNumber:session.rounds.length+1,...roundForm}); setPending(false);
+    event.preventDefault(); if (!session) return; setMessage(null);
+    if (!/^\d+$/.test(distanceText)||!Number.isSafeInteger(Number(distanceText))||Number(distanceText)<1||Number(distanceText)>32767) { setMessage(null); return; }
+    setPending(true);
+    const result=await createRoundWithEnds({sessionId:session.id,roundNumber:session.rounds.length+1,...roundForm,distanceMetres:Number(distanceText)}); setPending(false);
     if (!result.ok) { setMessage(result.message); return; }
     setSessions((current)=>current.map((item)=>item.id===session.id?{...item,rounds:[...item.rounds,result.data]}:item)); setActiveRoundId(result.data.id); setView("scoring");
   }
@@ -94,7 +104,7 @@ export function SessionsWorkspace({initialSessions}:{initialSessions:SessionDraf
     </div>}
     {view==="setup"&&session&&<form className={styles.formCard} onSubmit={submitRound}>
       <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={()=>setView("session")}>← Session</button><p>Round {session.rounds.length+1}</p></div><h2>Configure Round</h2><p className={styles.formIntro}>Presets are starting points. Adjust anything to match what you are shooting.</p><RoundPresetsPanel selectedId={selectedPreset} onSelect={choosePreset}/>
-      <div className={styles.formGrid}><label className={styles.fullField}><span>Round name</span><input required value={roundForm.name} onChange={(e)=>setRoundForm({...roundForm,name:e.target.value})}/></label><label><span>Division</span><select value={roundForm.division} onChange={(e)=>changeDivision(e.target.value as Division)}>{DIVISIONS.map((item)=><option key={item}>{item}</option>)}</select></label><NumberField label="Distance (m)" value={roundForm.distanceMetres} onChange={changeDistance}/><DirectNumberField label="Number of Ends" value={roundForm.ends} onChange={(value)=>setRoundForm({...roundForm,ends:value})}/><DirectNumberField label="Arrows per End" value={roundForm.arrowsPerEnd} onChange={(value)=>setRoundForm({...roundForm,arrowsPerEnd:value})}/><label className={styles.fullField}><span>Target face option</span><select value={TARGET_FACE_OPTIONS.find((item)=>item.diameterCm===roundForm.faceDiameterCm&&item.faceType===roundForm.faceType)?.id??"custom"} onChange={(e)=>chooseTargetOption(e.target.value)}><option value="custom" disabled>Custom target settings</option>{TARGET_FACE_OPTIONS.map((item)=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label><NumberField label="Target face diameter (cm)" value={roundForm.faceDiameterCm} onChange={(value)=>setRoundForm({...roundForm,faceDiameterCm:value})}/><label><span>Target face layout</span><select value={roundForm.faceType} onChange={(e)=>setRoundForm({...roundForm,faceType:e.target.value as TargetFaceType})}><option value="full_face">Full face</option><option value="six_ring">6-ring face</option><option value="triple_face">Triple face</option></select></label></div>
+      <div className={styles.formGrid}><label className={styles.fullField}><span>Round name</span><input required value={roundForm.name} onChange={(e)=>setRoundForm({...roundForm,name:e.target.value})}/></label><label><span>Division</span><select value={roundForm.division} onChange={(e)=>changeDivision(e.target.value as Division)}>{DIVISIONS.map((item)=><option key={item}>{item}</option>)}</select></label><DistanceField value={distanceText} onChange={editDistance}/><DirectNumberField label="Number of Ends" value={roundForm.ends} onChange={(value)=>setRoundForm({...roundForm,ends:value})}/><DirectNumberField label="Arrows per End" value={roundForm.arrowsPerEnd} onChange={(value)=>setRoundForm({...roundForm,arrowsPerEnd:value})}/><label className={styles.fullField}><span>Target face option</span><select value={TARGET_FACE_OPTIONS.find((item)=>item.diameterCm===roundForm.faceDiameterCm&&item.faceType===roundForm.faceType)?.id??"custom"} onChange={(e)=>chooseTargetOption(e.target.value)}><option value="custom" disabled>Custom target settings</option>{TARGET_FACE_OPTIONS.map((item)=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label><NumberField label="Target face diameter (cm)" value={roundForm.faceDiameterCm} onChange={(value)=>setRoundForm({...roundForm,faceDiameterCm:value})}/><label><span>Target face layout</span><select value={roundForm.faceType} onChange={(e)=>setRoundForm({...roundForm,faceType:e.target.value as TargetFaceType})}><option value="full_face">Full face</option><option value="six_ring">6-ring face</option><option value="triple_face">Triple face</option></select></label></div>
       <button className={styles.primary} disabled={pending} type="submit">{pending?"Creating Ends…":"Start scoring"}</button>
     </form>}
   </section>;
@@ -103,6 +113,7 @@ function SessionSection({heading,emptyMessage,sessions,onOpen,onDelete}:{heading
   return <section aria-labelledby={`session-section-${heading.toLowerCase()}`}><h3 id={`session-section-${heading.toLowerCase()}`} className={styles.sessionSectionTitle}>{heading}</h3>{sessions.length===0?<p className={styles.sessionSectionEmpty}>{emptyMessage}</p>:<div className={styles.roundCards}>{sessions.map((item)=><article key={item.id} className={styles.roundCard}><div><p className={styles.kicker}>{item.date}</p><h3>{item.title}</h3><p>{item.rounds.length} {item.rounds.length===1?"Round":"Rounds"}</p><p>Arrow count: <strong>{item.arrowCount}</strong></p></div><div className={styles.cardActions}><button type="button" onClick={()=>onOpen(item)}>Open</button><button type="button" className={styles.dangerText} onClick={()=>onDelete(item.id)}>Delete</button></div></article>)}</div>}</section>;
 }
 function NumberField({label,value,onChange}:{label:string;value:number;onChange:(value:number)=>void}) { return <label><span>{label}</span><input required type="number" min="1" step="1" value={value} onChange={(e)=>onChange(Math.max(1,Number(e.target.value)))}/></label>; }
+function DistanceField({value,onChange}:{value:string;onChange:(value:string)=>void}) { return <label><span>Distance (m)</span><input type="text" inputMode="numeric" value={value} onChange={(event)=>onChange(event.target.value)}/></label>; }
 function DirectNumberField({label,value,onChange}:{label:string;value:number;onChange:(value:number)=>void}) {
   const [editingText,setEditingText]=useState<string|null>(null);
   const text=editingText??String(value);

@@ -111,6 +111,11 @@
 .footer span:last-child {
   white-space: nowrap;
 }
+@media (max-width: 950px) {
+  .headerInner { flex-wrap: wrap; gap: 12px 20px; }
+  .navigation { order: 2; width: 100%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .navLink { min-width: 0; padding-inline: 6px; }
+}
 @media (max-width: 640px) {
   .headerInner {
     padding: 16px 20px 12px;
@@ -126,7 +131,8 @@
   .navigation {
     order: 2;
     width: 100%;
-    gap: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
   }
   .navLink {
     flex: 1;

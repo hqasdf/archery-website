@@ -45,12 +45,6 @@ export function AppShell({
       <main id="main-content" tabIndex={-1} className={styles.main}>
         {children}
       </main>
-      <footer className={styles.footer}>
-        <p>
-          Session recording is being built. Score saving is not available yet.
-        </p>
-        <span>One end at a time.</span>
-      </footer>
     </div>
   );
 }

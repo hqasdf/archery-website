@@ -32,7 +32,7 @@ export function validateRoundInput(input:RoundInput) {
   if (!DIVISIONS.includes(input.division as (typeof DIVISIONS)[number])) return {ok:false as const,message:"Choose a valid division."};
   if (!FACE_TYPES.includes(input.faceType as TargetFaceType)) return {ok:false as const,message:"Choose a valid target-face layout."};
   const numbers=[input.roundNumber,input.distanceMetres,input.faceDiameterCm,input.ends,input.arrowsPerEnd];
-  if (numbers.some((value)=>!Number.isInteger(value)||value<1||value>32767)) return {ok:false as const,message:"Round measurements and counts must be positive whole numbers."};
+  if (numbers.some((value)=>!Number.isInteger(value)||value<1||value>32767)) return {ok:false as const,message:""};
   return {ok:true as const,value:{...input,name,division:input.division as (typeof DIVISIONS)[number],faceType:input.faceType as TargetFaceType}};
 }
 

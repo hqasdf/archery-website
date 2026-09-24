@@ -1,0 +1,35 @@
+.counter{width:min(100%,700px);min-height:min(740px,calc(100svh - 180px));margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.toolbar,.tools,.back,.centerRow,.selectedIncrement,.confirmActions{display:flex;align-items:center}
+.toolbar{justify-content:space-between;gap:12px}
+.back{justify-content:center;width:48px;height:48px;color:var(--color-primary)}
+.back svg{width:22px;height:22px}
+.tools{gap:6px}
+.tools button{width:48px;height:48px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--color-primary);cursor:pointer}
+.tools button:hover{background:var(--color-peach-light)}
+.tools button:disabled{opacity:.35;cursor:default}
+.tools svg{width:23px;height:23px}
+.centerRow{flex:1;min-height:240px;justify-content:center;gap:clamp(14px,5vw,42px)}
+.display{min-width:0;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.totalLabel{color:var(--color-muted);font-size:.72rem;font-weight:800;letter-spacing:.2em}
+.total{max-width:none;overflow:visible;white-space:nowrap;padding:.1em .08em;font-size:clamp(5rem,20vw,10rem);font-weight:700;letter-spacing:-.075em;line-height:1.05;font-variant-numeric:tabular-nums}
+.selector{width:94px;max-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;touch-action:pan-y;user-select:none}
+.nearby{width:100%;min-height:36px;border:0;background:transparent;color:var(--color-muted);font-size:.9rem;font-variant-numeric:tabular-nums;cursor:pointer}
+.nearby:hover{color:var(--color-primary)}
+.selectedIncrement{width:100%;min-height:58px;justify-content:center;gap:0;border:2px solid var(--color-primary);border-radius:14px;background:var(--color-peach-light);color:var(--color-primary)}
+.selectedIncrement button{width:26px;height:44px;padding:0;border:0;background:transparent;color:var(--color-primary);font-size:1.1rem;font-weight:700;cursor:pointer}
+.selectedIncrement input{width:39px;min-width:0;padding:0;border:0;outline:0;background:transparent;color:var(--color-primary);text-align:center;font-size:1.2rem;font-weight:800;font-variant-numeric:tabular-nums}
+.clicker{width:100%;min-height:260px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:0;border-radius:28px;background:var(--color-primary);color:white;box-shadow:0 8px 0 #35261e,0 18px 32px rgba(56,42,36,.14);cursor:pointer;touch-action:manipulation;user-select:none;font-size:clamp(2rem,7vw,3.4rem);font-weight:800;letter-spacing:.02em;transition:transform .08s,box-shadow .08s}
+.clicker svg{width:70px;height:70px;stroke-width:2.5}
+.clicker:active:not(:disabled){transform:translateY(6px);box-shadow:0 2px 0 #35261e,0 8px 18px rgba(56,42,36,.14)}
+.clicker:disabled{opacity:.55;cursor:default}
+.message{margin:0;color:#87352f;font-size:.82rem;text-align:center}
+.modalBackdrop{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:rgba(30,21,17,.5)}
+.modal{width:min(100%,360px);padding:24px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:0 20px 60px rgba(30,21,17,.2)}
+.modal h2{font-size:1.25rem;margin-bottom:12px}
+.modal p{color:var(--color-muted);font-size:.9rem;line-height:1.5}
+.confirmActions{justify-content:flex-end;gap:10px;margin-top:22px}
+.confirmActions button{min-height:48px;padding:10px 16px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:white;color:var(--color-text);font-weight:700;cursor:pointer}
+.confirmActions .apply{border-color:var(--color-primary);background:var(--color-primary);color:white}
+@media(max-width:640px){.counter{min-height:calc(100svh - 70px);gap:14px}.centerRow{min-height:210px}.clicker{min-height:240px}.selector{width:84px;max-height:240px}.nearby{min-height:32px}}
+@media(max-width:360px){.counter{gap:10px}.centerRow{gap:10px}.total{font-size:clamp(4.2rem,21vw,5.5rem)}.selector{width:78px}.clicker{border-radius:22px}}

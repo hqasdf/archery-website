@@ -56,7 +56,7 @@ export function AuthPanel({
         )}
         <div className={styles.links}>{children}</div>
       </section>
-      <p className={styles.footnote}>Recurve & compound · One end at a time.</p>
+      <p className={styles.footnote}>Recurve & compound</p>
     </main>
   );
 }
