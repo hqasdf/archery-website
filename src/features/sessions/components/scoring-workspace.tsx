@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { removeArrow as removeArrowAction, saveArrow } from "../actions";
-import { SCORE_LABELS, arrowAverage, arrowKey, endTotal, points, roundTotal, scoreFromPlot, xCount, type ArrowEntry, type Plot, type RoundDraft, type ScoreLabel } from "../scoring-model";
+import { SCORE_LABELS, arrowAverage, arrowKey, endTotal, roundTotal, scoreFromPlot, xCount, type ArrowEntry, type Plot, type RoundDraft, type ScoreLabel } from "../scoring-model";
 import { TargetFace } from "./target-face";
 import { RoundInsights } from "./session-insights";
 import styles from "./sessions.module.css";
@@ -12,6 +12,8 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
   const [correctionOpen,setCorrectionOpen]=useState(false);
   const [saveMessage,setSaveMessage]=useState<string|null>(null);
   const selected=round.arrows.find((item)=>item.end===slot.end&&item.arrow===slot.arrow)??null;
+  const endHistory=Map.groupBy([...round.arrows].sort((a,b)=>a.end-b.end||a.arrow-b.arrow),(item)=>item.end);
+  const newestEnd=Math.max(0,...endHistory.keys());
 
   function chooseSlot(next:{end:number;arrow:number}) { setCorrectionOpen(false); setSlot(next); }
   function selectNext(arrows:ArrowEntry[]) {
@@ -55,7 +57,7 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
         {selected&&<div className={styles.editArea}><div className={styles.editActions}><button type="button" aria-expanded={correctionOpen} onClick={()=>setCorrectionOpen((open)=>!open)}>Correct score</button><button type="button" onClick={clearPlot} disabled={!selected.plot}>Clear marker</button><button type="button" className={styles.dangerText} onClick={removeSelected}>Remove arrow</button>{selected.syncState==="failed"&&<button type="button" className={styles.retryButton} onClick={()=>{const entry={...selected,syncState:"saving" as const};replaceArrow(entry);void persist(entry);}}>Retry save</button>}</div>{correctionOpen&&<div className={styles.correctionPanel} aria-label="Correct recorded score">{SCORE_LABELS.map((score)=><button key={score} type="button" aria-pressed={selected.score===score} className={`${styles.correctionOption} ${styles[`score${score==="M"?"Miss":score}`]}`} onClick={()=>correctScore(score)}>{score}</button>)}</div>}</div>}
       </div>
     </div>
-    <div className={styles.roundLog}><h3>Arrows entered</h3>{round.arrows.length===0?<p>No arrows yet. Tap the target to score the first arrow.</p>:<div className={styles.logGrid}>{[...round.arrows].sort((a,b)=>a.end-b.end||a.arrow-b.arrow).map((item)=><button type="button" key={`${item.end}-${item.arrow}`} onClick={()=>chooseSlot({end:item.end,arrow:item.arrow})} className={selected?.end===item.end&&selected.arrow===item.arrow?styles.logItemActive:styles.logItem}><span>E{item.end} · A{item.arrow}</span><strong>{item.score}</strong><small>{item.syncState==="saving"?"Saving…":item.syncState==="failed"?"Not saved · Retry":"Saved"}{item.plot?" · plotted":""} · {points(item.score)} pts</small></button>)}</div>}</div>
+    <div className={styles.roundLog}><h3>End history</h3>{endHistory.size===0?<p>No arrows yet. Tap the target to score the first arrow.</p>:<div className={styles.endHistory}>{[...endHistory].map(([end,arrows])=><div key={end} className={`${styles.endHistoryRow} ${slot.end===end||slot.end>newestEnd&&end===newestEnd?styles.endHistoryCurrent:""}`}><strong className={styles.endHistoryNumber}>END {end}</strong><strong className={styles.endHistoryTotal}>{endTotal(arrows,end)} pts</strong>{xCount(arrows)>0&&<strong className={styles.endHistoryX}>{xCount(arrows)}X</strong>}<div className={styles.endHistoryScores}>{arrows.map((item)=><button type="button" key={item.arrow} className={`${styles.endHistoryScore} ${selected?.end===item.end&&selected.arrow===item.arrow?styles.endHistoryScoreSelected:""} ${item.syncState==="failed"?styles.endHistoryScoreFailed:""}`} aria-label={`End ${item.end}, Arrow ${item.arrow}: ${item.score}${item.syncState==="failed"?", not saved; select to retry":item.syncState==="saving"?", saving":""}`} aria-pressed={selected?.end===item.end&&selected.arrow===item.arrow} title={item.syncState==="failed"?"Not saved · select to retry":item.syncState==="saving"?"Saving…":`End ${item.end} · Arrow ${item.arrow}`} onClick={()=>chooseSlot({end:item.end,arrow:item.arrow})}>{item.score==="X"?"10X":item.score}</button>)}</div></div>)}</div>}</div>
     <RoundInsights round={round}/>
   </section>;
 }
