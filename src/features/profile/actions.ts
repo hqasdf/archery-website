@@ -22,7 +22,6 @@ export async function saveProfile(_previous: ProfileState, form: FormData): Prom
       return { status: "error", message: "Your profile could not be saved. Please try again." };
     }
     revalidatePath("/profile");
-    revalidatePath("/dashboard");
     revalidatePath("/sessions");
     return { status: "success", message: "Profile saved.", profile: data };
   } catch {

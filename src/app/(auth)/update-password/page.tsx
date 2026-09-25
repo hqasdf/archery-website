@@ -12,7 +12,7 @@ export default async function UpdatePasswordPage() {
       title="Choose a new password."
       description="Use a unique password for your archery journal."
     >
-      <Link href="/dashboard">Return to dashboard</Link>
+      <Link href="/sessions">Return to Sessions</Link>
       <Link href="/forgot-password">Request another reset link</Link>
     </AuthPanel>
   );

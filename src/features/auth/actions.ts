@@ -202,7 +202,7 @@ export async function updatePassword(
   return {
     status: "success",
     message:
-      "Your password has been updated. You can return to your dashboard.",
+      "Your password has been updated. You can return to Sessions.",
   };
 }
 

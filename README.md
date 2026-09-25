@@ -2,7 +2,7 @@
 
 The foundation of an archery performance platform for recurve and compound archers.
 
-The app contains a responsive shell, Dashboard and Sessions pages, agreed round presets, and Supabase email/password authentication code. Account creation, sign-in, confirmation, recovery, and sign-out use the configured Supabase connection but still need live account verification. Registration confirmation and recovery use six-digit codes; configure Supabase expiry to 300 seconds. Score collection, profile persistence, and session saving are not implemented yet.
+The app contains Sessions, Arrow Counter, Analytics, Organisation and Profile features, plus Supabase email/password authentication. Account creation, sign-in, confirmation, recovery, and sign-out use the configured Supabase connection. Registration confirmation and recovery use six-digit codes; configure Supabase expiry to 300 seconds.
 
 Start with [the guided Supabase setup](docs/auth-setup.md). Until connection settings are present, authentication forms stay disabled and protected pages redirect to sign-in. This is intentional.
 
@@ -31,9 +31,8 @@ The production build does not launch a server. To view it, stop the development 
 ## Learn the structure
 
 - `src/app/layout.tsx`: document structure and site metadata.
-- `src/app/page.tsx`: redirects `/` to the dashboard.
+- `src/app/page.tsx`: redirects `/` to Sessions.
 - `src/app/(platform)/layout.tsx`: verifies identity and puts the shared shell around platform pages. Parentheses group routes without changing URLs. Each current protected page also checks identity.
-- `src/app/(platform)/dashboard/page.tsx`: dashboard content.
 - `src/app/(platform)/sessions/page.tsx`: session preview content.
 - `src/components/layout/app-shell.tsx`: header, navigation placement, main content, and footer.
 - `src/components/layout/navigation.tsx`: the small client component that highlights the current route.
@@ -47,23 +46,23 @@ Auth forms call server actions, which validate input and call Supabase Auth. Coo
 
 ## Guided first exercise
 
-1. Open the dashboard page and find the sentence “A little context for every arrow.”
-2. Change the sentence and save the file. The browser should update automatically.
+1. Open the Sessions page and find its heading.
+2. Change the heading and save the file. The browser should update automatically.
 3. Open `src/styles/globals.css` and locate `--color-peach`. This token controls the shared accent colour.
-4. Navigate between Dashboard and Sessions. Notice that the surrounding layout stays consistent while the page changes.
+4. Navigate between Sessions and Analytics. Notice that the surrounding layout stays consistent while the page changes.
 
 ## Manual acceptance checks
 
 First complete the account checks in docs/auth-setup.md. The following foundation checks require a signed-in account, except the not-found screen.
 
-1. Open `/` while signed in: expect `/dashboard` and the Dashboard tab highlighted. While signed out, expect `/sign-in`.
-2. Select Explore sessions: expect `/sessions` and the Sessions tab highlighted.
+1. Open `/`: expect `/sessions`.
+2. Confirm Sessions is available as the normal signed-in starting page.
 3. Check presets: 18 m shows 10 × 3, 30 arrows, 300 points. 30/50/70 m each show 6 × 6, 36 arrows, 360 points.
 4. Expand “A different end arrangement?”: expect the 70 m, 3 × 12 example. Collapse it again.
 5. Reload `/sessions` directly: expect the page to remain available without visiting the dashboard first.
 6. Resize to 390 px and 320 px wide: expect stacked content, readable labels, and no horizontal page scrolling.
 7. Reload, then press Tab: the Skip to content link should appear. Press Enter to jump to the main content. Continue using Tab and Enter to navigate. The round explanation supports Enter/Space.
-8. Visit a nonexistent URL: expect the custom not-found screen with a working dashboard link.
+8. Visit a nonexistent URL: expect the custom not-found screen with a working Sessions link.
 9. Confirm Sign out is visible while signed in and the unavailable-saving explanation remains clear. Sign out and confirm direct visits to protected pages return to sign-in.
 
 An unavailable localhost page usually means the development server is stopped. A port-in-use message usually means another server is running; check the terminal for the actual address rather than killing unrelated processes. This preview is not accessible from a separate phone while bound to localhost; use browser mobile emulation for this increment.

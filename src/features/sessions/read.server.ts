@@ -14,13 +14,12 @@ export const SESSION_DETAIL_SELECT=`
     session_ends(end_number,arrows(id,arrow_number,score_points,is_x,plot_x,plot_y,face_index)))
 `;
 
-export async function readSessions(options?:{sessionType?:SessionType;limit?:number}):Promise<SessionDraft[]> {
+export async function readSessions(options?:{sessionType?:SessionType}):Promise<SessionDraft[]> {
   const user=await requireUser();
   const supabase=await createAuthClient();
   function buildQuery() {
     let query=supabase.from("sessions").select(SESSION_DETAIL_SELECT).eq("user_id",user.id).order("session_date",{ascending:false}).order("created_at",{ascending:false});
     if (options?.sessionType) query=query.eq("session_type",options.sessionType);
-    if (options?.limit) query=query.limit(options.limit);
     return query;
   }
   const {data,error}=await buildQuery();
@@ -32,7 +31,6 @@ export function mapSession(row:DbSession):SessionDraft {
   return {id:row.id,title:row.title,date:row.session_date,sessionType:row.session_type as SessionType,arrowCount:row.arrow_count,rounds:(row.session_rounds??[]).sort((a,b)=>a.round_number-b.round_number).map(mapRound)};
 }
 
-export function readRecentTrainingSessions(limit=3) { return readSessions({sessionType:"training",limit}); }
 function mapRound(row:DbRound):RoundDraft {
   const arrows:ArrowEntry[]=(row.session_ends??[]).sort((a,b)=>a.end_number-b.end_number).flatMap((end)=>(end.arrows??[]).sort((a,b)=>a.arrow_number-b.arrow_number).map((arrow)=>({
     id:arrow.id,end:end.end_number,arrow:arrow.arrow_number,score:arrow.is_x?"X":arrow.score_points===0?"M":String(arrow.score_points) as ArrowEntry["score"],

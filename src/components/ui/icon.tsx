@@ -1,10 +1,9 @@
 import type { CSSProperties } from "react";
 
-type IconName = "arrow" | "dashboard" | "sessions" | "analytics" | "target" | "check" | "profile" | "organization";
+type IconName = "arrow" | "sessions" | "analytics" | "target" | "check" | "profile" | "organization";
 
 const paths: Record<IconName, string> = {
   arrow: "M5 12h14m-6-6 6 6-6 6",
-  dashboard: "M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z",
   sessions: "M8 4H5v17h14V4h-3M8 2h8v5H8zm0 10h8m-8 4h5",
   analytics: "M4 19V9m6 10V5m6 14v-7m4 7V3",
   target: "M21 12a9 9 0 1 1-9-9m5 9a5 5 0 1 1-5-5m0 5 9-9m-5 0h5v5",

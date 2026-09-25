@@ -20,9 +20,9 @@ export function AppShell({
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link
-            href="/dashboard"
+            href="/sessions"
             className={styles.brand}
-            aria-label="Arc Track dashboard"
+            aria-label="Arc Track Sessions"
           >
             <span className={styles.brandMark}>
               <Icon name="target" size={24} />

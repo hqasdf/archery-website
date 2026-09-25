@@ -9,10 +9,10 @@ export default function NotFound() {
         <p className={styles.eyebrow}>Page not found</p>
         <h1>Let’s get you back on track.</h1>
         <p>
-          This page does not exist. Your dashboard is a good place to start.
+          This page does not exist. Sessions is a good place to start.
         </p>
       </div>
-      <ActionLink href="/dashboard">Back to dashboard</ActionLink>
+      <ActionLink href="/sessions">Back to Sessions</ActionLink>
     </AppShell>
   );
 }

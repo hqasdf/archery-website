@@ -8,7 +8,6 @@ import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import styles from "./shell.module.css";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/sessions", label: "Sessions", icon: "sessions" },
   { href: "/arrow-counter", label: "Arrow Counter", icon: "target" },
   { href: "/analytics", label: "Analytics", icon: "analytics" },
