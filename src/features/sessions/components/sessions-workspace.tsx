@@ -110,9 +110,9 @@ export function SessionsWorkspace({initialSessions}:{initialSessions:SessionDraf
   const trainingSessions=sessions.filter((item)=>item.sessionType==="training");
   const competitionSessions=sessions.filter((item)=>item.sessionType==="competition");
 
-  if (view==="scoring"&&session&&activeRound) return <><SavedNotice/><ScoringWorkspace sessionTitle={session.title} sessionDate={session.date} round={activeRound} onChange={(update)=>updateRound(activeRound.id,update)} onBack={()=>setView("session")} onConfigure={()=>configureRound(activeRound)}/></>;
+  if (view==="scoring"&&session&&activeRound) return <ScoringWorkspace sessionTitle={session.title} sessionDate={session.date} round={activeRound} onChange={(update)=>updateRound(activeRound.id,update)} onBack={()=>setView("session")} onConfigure={()=>configureRound(activeRound)}/>;
   return <section className={styles.workspace}>
-    <SavedNotice/>{message&&<p className={styles.saveError} role="alert">{message}</p>}
+    {message&&<p className={styles.saveError} role="alert">{message}</p>}
     {view==="sessions"&&<div>
       <div className={styles.sessionHeading}><div><p className={styles.kicker}>Training history</p><h2>{sessions.length?"Your saved Sessions":"Start today’s scorecard"}</h2><p>{sessions.length?"Open a Session or start another scorecard.":"Create a Session, then add as many Rounds as you need."}</p></div><button className={styles.primary} type="button" onClick={()=>setView("new-session")}>New Session</button></div>
       {sessions.length>0&&<div className={styles.sessionSections}><SessionSection heading="Training" emptyMessage="No Training Sessions yet." sessions={trainingSessions} onOpen={openSession} onDelete={removeSession}/><SessionSection heading="Competitions" emptyMessage="No Competitions yet." sessions={competitionSessions} onOpen={openSession} onDelete={removeSession}/></div>}
@@ -147,4 +147,3 @@ function DirectNumberField({label,value,onChange}:{label:string;value:number;onC
   return <label><span>{label}</span><input required type="text" inputMode="numeric" pattern="[0-9]*" value={text} onFocus={()=>setEditingText(String(value))} onChange={(event)=>{const next=event.target.value;if (!/^\d*$/.test(next)) return;setEditingText(next);if (next!=="") onChange(Number(next));}} onBlur={()=>setEditingText(null)}/></label>;
 }
 function defaultTarget(distanceMetres:number,division:Division,fallback:{faceDiameterCm:number;faceType:TargetFaceType}) { if (distanceMetres===70) return {faceDiameterCm:122,faceType:"full_face" as const}; if (distanceMetres===50&&division==="Compound") return {faceDiameterCm:80,faceType:"six_ring" as const}; if (distanceMetres===18) return {faceDiameterCm:40,faceType:"full_face" as const}; return fallback; }
-function SavedNotice() { return <p className={styles.prototypeNotice}>Scores and plotted arrows are saved to your Arc Track account.</p>; }

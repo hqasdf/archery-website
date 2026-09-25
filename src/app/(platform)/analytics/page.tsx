@@ -15,7 +15,6 @@ export default async function AnalyticsPage() {
     <div className={styles.intro}>
       <p className={styles.eyebrow}>Your performance</p>
       <h1>Analytics</h1>
-      <p>See how your saved Arrows are developing across Training and Competition.</p>
     </div>
     <AnalyticsWorkspace sessions={sessions} today={today}/>
   </>;

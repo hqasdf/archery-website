@@ -48,7 +48,7 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
   }
 
   return <section className={styles.scoringView} aria-labelledby="scoring-title">
-    <div className={styles.viewTop}><button type="button" className={styles.textButton} onClick={onBack}>← Session</button><p>{sessionTitle} · {sessionDate}</p></div>
+    <div className={styles.viewTop}><button type="button" className={styles.backIcon} aria-label="Back to Session" title="Back to Session" onClick={onBack}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m7 7-7-7 7-7"/></svg></button><p>{sessionTitle} · {sessionDate}</p></div>
     <div className={styles.scoreHeading}><div><p className={styles.kicker}>{round.division} · {round.distanceMetres} m · {faceLabel(round.faceType,round.faceDiameterCm)}</p><h2 id="scoring-title">{round.name}</h2><button type="button" className={styles.configureButton} disabled={round.arrows.length>0} title={round.arrows.length>0?"Round settings cannot change after arrows are recorded":"Configure this empty Round"} onClick={onConfigure}>Configure</button></div><div className={styles.current}><span>Current</span><strong>End {slot.end} · Arrow {slot.arrow}</strong></div></div>
     {saveMessage&&<p className={styles.saveError} role="alert">{saveMessage}</p>}
     <div className={styles.totals}><div><span>End {slot.end}</span><strong>{endTotal(round.arrows,slot.end)}</strong></div><div><span>Round</span><strong>{roundTotal(round.arrows)}</strong></div><div><span>Arrow avg.</span><strong>{formatArrowAverage(round.arrows)}</strong></div><div><span>X count</span><strong>{xCount(round.arrows)}</strong></div><div><span>Entered</span><strong>{round.arrows.length}/{round.ends*round.arrowsPerEnd}</strong></div></div>
