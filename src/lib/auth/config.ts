@@ -54,6 +54,6 @@ export function getAuthConfig(): AuthConfig | null {
 
 export function callbackDestination(
   value: string | null,
-): "/dashboard" | "/update-password" {
-  return value === "/update-password" ? value : "/dashboard";
+): "/sessions" | "/update-password" {
+  return value === "/update-password" ? value : "/sessions";
 }

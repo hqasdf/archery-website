@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AuthPanel } from "@/features/auth/components/auth-panel";
+import { readIdentity } from "@/lib/auth/session.server";
 
 export const metadata: Metadata = { title: "Sign in" };
 const notices: Record<string, string> = {
@@ -16,6 +18,8 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ status?: string | string[] }>;
 }) {
+  const { user } = await readIdentity();
+  if (user) redirect("/sessions");
   const { status } = await searchParams;
   const notice =
     typeof status === "string" && Object.hasOwn(notices, status)

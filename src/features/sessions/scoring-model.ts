@@ -32,3 +32,17 @@ export function formatArrowAverage(arrows: ArrowEntry[]) { const average = arrow
 export function endTotal(arrows: ArrowEntry[], end: number) { return roundTotal(arrows.filter((item) => item.end === end)); }
 export function xCount(arrows: ArrowEntry[]) { return arrows.filter((item) => item.score === "X").length; }
 export function arrowKey(end: number, arrow: number) { return `${end}-${arrow}`; }
+export function latestPlottedArrow(arrows: ArrowEntry[], preferredKey: string | null): ArrowEntry | null {
+  const plotted = arrows.filter((item) => item.plot !== null);
+  return plotted.find((item) => arrowKey(item.end, item.arrow) === preferredKey)
+    ?? plotted.reduce<ArrowEntry | null>((latest, item) =>
+      !latest || item.end > latest.end || item.end === latest.end && item.arrow > latest.arrow ? item : latest, null);
+}
+export function nextPlottedArrowSlot(arrows: ArrowEntry[], deleted: Pick<ArrowEntry,"end"|"arrow">): {end:number;arrow:number}|null {
+  const after=arrows.filter((item)=>item.plot!==null&&(item.end>deleted.end||item.end===deleted.end&&item.arrow>deleted.arrow))
+    .sort((a,b)=>a.end-b.end||a.arrow-b.arrow)[0];
+  if (after) return {end:after.end,arrow:after.arrow};
+  const before=arrows.filter((item)=>item.plot!==null&&(item.end<deleted.end||item.end===deleted.end&&item.arrow<deleted.arrow))
+    .sort((a,b)=>b.end-a.end||b.arrow-a.arrow)[0];
+  return before?{end:before.end,arrow:before.arrow}:null;
+}

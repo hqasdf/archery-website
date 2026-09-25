@@ -3,7 +3,7 @@
 .heading h1{margin:0;font-size:clamp(1.8rem,5vw,2.5rem);overflow-wrap:anywhere}
 .heading p{margin:0;color:var(--color-muted)}
 .heading .eyebrow{color:var(--color-primary);font-size:.76rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
-.back{width:fit-content;max-width:100%;min-height:44px;display:inline-flex;align-items:center;color:var(--color-primary);font-weight:700;text-decoration:none;overflow-wrap:anywhere}
+.back{width:fit-content;max-width:100%;min-height:44px;display:inline-flex;     -items:center;color:var(--color-primary);font-weight:700;text-decoration:none;overflow-wrap:anywhere}
 .back:focus-visible,.athleteLink:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}
 .overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
 .overview>div,.groupingNumbers>div{display:grid;align-content:center;gap:3px;min-width:0;min-height:92px;padding:15px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-sm)}

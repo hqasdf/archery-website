@@ -65,8 +65,6 @@ export function TargetFace({ arrows, selectedId, currentEnd, faceType, faceDiame
     pointers.current.delete(event.pointerId); tap.current=null; pinch.current=null; suppressUntil.current=performance.now()+350;
     if (pointers.current.size===0) hadMultiTouch.current=false;
   }
-  function resetZoom() { pointers.current.clear(); tap.current=null; pinch.current=null; hadMultiTouch.current=false; updateTransform(IDENTITY_TARGET_TRANSFORM); }
-
   const viewBox=`${view.x} ${view.y} ${view.width} ${view.height}`;
   const label=faceType==="triple_face"?"Three-face target":faceType==="six_ring"?"Six-ring target":"Full ten-ring target";
   const {grouping,mainGroup}=useMemo(()=>{
@@ -81,8 +79,7 @@ export function TargetFace({ arrows, selectedId, currentEnd, faceType, faceDiame
   const plottedArrows=arrows.filter((item)=>item.plot);
   const orderedArrows=[...plottedArrows.filter((item)=>item.end!==currentEnd&&item.id!==selectedId),...plottedArrows.filter((item)=>item.end===currentEnd&&item.id!==selectedId),...plottedArrows.filter((item)=>item.id===selectedId)];
   return <div className={`${styles.targetWrap} ${faceType==="triple_face"?styles.tripleTargetWrap:""}`}>
-    <div className={styles.targetToolbar}><span>{transform.scale>1?`${transform.scale.toFixed(1)}x zoom`:"Target view"}</span><button type="button" onClick={resetZoom} disabled={transform.scale===1&&transform.panX===0&&transform.panY===0}>Reset zoom</button></div>
-    <svg className={`${styles.target} ${faceType==="triple_face"?styles.tripleTarget:""}`} viewBox={viewBox} role="img" aria-label={`${label}. Tap to score the current arrow or move the selected arrow. Pinch with two fingers to zoom and pan.`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel}>
+    <svg className={`${styles.target} ${faceType==="triple_face"?styles.tripleTarget:""}`} viewBox={viewBox} role="img" aria-label={`${label} scoring surface`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerCancel}>
       <defs><marker id="live-group-centre-arrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="4" markerHeight="4" orient="auto"><path d="M 0 0 L 8 4 L 0 8 z" className={styles.groupCentreArrowHead}/></marker></defs>
       <g transform={`translate(${transform.panX} ${transform.panY}) scale(${transform.scale})`}>
         {faceType==="triple_face"
@@ -94,7 +91,6 @@ export function TargetFace({ arrows, selectedId, currentEnd, faceType, faceDiame
       </g>
     </svg>
     {mainGroup.metrics&&<GroupPositionSummary metrics={mainGroup.metrics} faceDiameterCm={faceDiameterCm} sightCheck={sightCheck}/>}
-    <p className={styles.targetHint}>{selectedId?"Tap to move this Arrow. Pinch with two fingers to zoom or pan.":"Tap to score. Pinch with two fingers to zoom or pan."}</p>
   </div>;
 }
 

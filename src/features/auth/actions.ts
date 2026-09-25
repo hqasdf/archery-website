@@ -61,7 +61,7 @@ export async function signIn(
     return unavailable;
   }
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect("/sessions");
 }
 
 export async function signUp(
@@ -97,7 +97,7 @@ export async function signUp(
   }
   if (signedIn) {
     revalidatePath("/", "layout");
-    redirect("/dashboard");
+    redirect("/sessions");
   }
   // UI context only: this email grants no access; Supabase must verify the OTP.
   const cookieStore = await cookies();
@@ -164,7 +164,7 @@ async function submitVerification(mode: VerificationMode, form: FormData): Promi
     const cookieStore = await cookies();
     cookieStore.delete("arc-track-signup-email");
   }
-  redirect(mode === "recovery" ? "/update-password" : "/dashboard");
+  redirect(mode === "recovery" ? "/update-password" : "/sessions");
 }
 
 export async function verifyEmail(_previous: AuthState, form: FormData): Promise<AuthState> {

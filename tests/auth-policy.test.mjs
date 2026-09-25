@@ -89,7 +89,7 @@ test("callback destinations cannot escape to an attacker-controlled URL", () => 
     "/update-password?next=https://attacker.example",
     "%2F%2Fattacker.example",
   ]) {
-    assert.equal(callbackDestination(path), "/dashboard");
+    assert.equal(callbackDestination(path), "/sessions");
   }
   assert.equal(callbackDestination("/update-password"), "/update-password");
 });
