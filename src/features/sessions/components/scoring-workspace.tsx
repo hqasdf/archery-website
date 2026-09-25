@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { removeArrow as removeArrowAction, saveArrow } from "../actions";
-import { SCORE_LABELS, arrowAverage, arrowKey, endTotal, roundTotal, scoreFromPlot, xCount, type ArrowEntry, type Plot, type RoundDraft, type ScoreLabel } from "../scoring-model";
+import { SCORE_LABELS, arrowKey, endTotal, formatArrowAverage, roundTotal, scoreFromPlot, xCount, type ArrowEntry, type Plot, type RoundDraft, type ScoreLabel } from "../scoring-model";
 import { TargetFace } from "./target-face";
 import { RoundInsights } from "./session-insights";
 import styles from "./sessions.module.css";
@@ -62,4 +62,3 @@ export function ScoringWorkspace({sessionTitle,sessionDate,round,onChange,onBack
   </section>;
 }
 function faceLabel(faceType:RoundDraft["faceType"],diameter:number) { return faceType==="triple_face"?`${diameter} cm triple face`:faceType==="six_ring"?`${diameter} cm 6-ring face`:`${diameter} cm full face`; }
-function formatArrowAverage(arrows:ArrowEntry[]) { const average=arrowAverage(arrows); return average === null ? "—" : average.toFixed(1); }

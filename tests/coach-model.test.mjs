@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { athleteAnalytics, latestCompletedRound, singaporeToday, thisWeek } from "../src/features/organizations/coach-model.ts";
+import { athleteAnalytics, latestCompletedRound, thisWeek } from "../src/features/organizations/coach-model.ts";
+import { singaporeDate } from "../src/lib/date.ts";
 
 const round = (id, arrows) => ({
   id, roundNumber: 1, name: id, division: "Recurve", distanceMetres: 70,
@@ -57,5 +58,5 @@ test("scored coach data can have a genuine zero X count", () => {
 });
 
 test("Singapore date remains ISO date-only", () => {
-  assert.equal(singaporeToday(new Date("2026-09-23T18:00:00Z")), "2026-09-24");
+  assert.equal(singaporeDate(new Date("2026-09-23T18:00:00Z")), "2026-09-24");
 });

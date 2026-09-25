@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { validateArrowInput, validateRoundInput, validateSessionArrowCount, validateSessionInput } from "../src/features/sessions/validation.ts";
-import { arrowAverage } from "../src/features/sessions/scoring-model.ts";
+import { arrowAverage, formatArrowAverage } from "../src/features/sessions/scoring-model.ts";
 
 const id="123e4567-e89b-42d3-a456-426614174000";
 
@@ -38,6 +38,8 @@ test("Arrow input converts X, 10 and Miss without changing plots",()=>{
 test("Arrow average derives from entered Arrow scores and counts X as ten",()=>{
   assert.equal(arrowAverage([]),null);
   assert.equal(arrowAverage([{id:"1",end:1,arrow:1,score:"X",plot:null},{id:"2",end:1,arrow:2,score:"8",plot:null},{id:"3",end:1,arrow:3,score:"M",plot:null}]),6);
+  assert.equal(formatArrowAverage([]),"—");
+  assert.equal(formatArrowAverage([{id:"1",end:1,arrow:1,score:"X",plot:null},{id:"2",end:1,arrow:2,score:"9",plot:null}]),"9.5");
 });
 
 test("Arrow input rejects malformed positions and identifiers",()=>{

@@ -8,17 +8,17 @@ type DbArrow={id:string;arrow_number:number;score_points:number;is_x:boolean;plo
 type DbEnd={end_number:number;arrows:DbArrow[]|null};
 type DbRound={id:string;round_number:number;name:string;division:string;distance_metres:number;face_diameter_cm:number;face_type:string;planned_ends:number;arrows_per_end:number;session_ends:DbEnd[]|null};
 export type DbSession={id:string;title:string;session_date:string;session_type:string;arrow_count:number;created_at:string;session_rounds:DbRound[]|null};
+export const SESSION_DETAIL_SELECT=`
+  id,title,session_date,session_type,arrow_count,created_at,
+  session_rounds(id,round_number,name,division,distance_metres,face_diameter_cm,face_type,planned_ends,arrows_per_end,
+    session_ends(end_number,arrows(id,arrow_number,score_points,is_x,plot_x,plot_y,face_index)))
+`;
 
 export async function readSessions(options?:{sessionType?:SessionType;limit?:number}):Promise<SessionDraft[]> {
   const user=await requireUser();
   const supabase=await createAuthClient();
-  const select=`
-    id,title,session_date,session_type,arrow_count,created_at,
-    session_rounds(id,round_number,name,division,distance_metres,face_diameter_cm,face_type,planned_ends,arrows_per_end,
-      session_ends(end_number,arrows(id,arrow_number,score_points,is_x,plot_x,plot_y,face_index)))
-  `;
   function buildQuery() {
-    let query=supabase.from("sessions").select(select).eq("user_id",user.id).order("session_date",{ascending:false}).order("created_at",{ascending:false});
+    let query=supabase.from("sessions").select(SESSION_DETAIL_SELECT).eq("user_id",user.id).order("session_date",{ascending:false}).order("created_at",{ascending:false});
     if (options?.sessionType) query=query.eq("session_type",options.sessionType);
     if (options?.limit) query=query.limit(options.limit);
     return query;

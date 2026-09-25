@@ -1,6 +1,7 @@
 import type { Division } from "../sessions/round-presets.ts";
-import type { ArrowEntry, RoundDraft, SessionDraft, SessionType, TargetFaceType } from "../sessions/scoring-model.ts";
+import { points, roundTotal as sumArrowPoints, type ArrowEntry, type RoundDraft, type SessionDraft, type SessionType, type TargetFaceType } from "../sessions/scoring-model.ts";
 import { calculateGroupingMetrics } from "../sessions/session-insights-model.ts";
+export { formatDateOnly as formatAnalyticsDate, formatWeekRange as formatAnalyticsWeekRange } from "../../lib/date.ts";
 
 export type AnalyticsSessionType = SessionType | "all";
 export type AnalyticsDateRange = "7" | "30" | "all";
@@ -107,14 +108,14 @@ export function filterAnalyticsRounds(sessions: SessionDraft[], filters: Analyti
 
 export function calculateOverview(rounds: AnalyticsRound[]) {
   const arrows = rounds.flatMap((item) => item.round.arrows);
-  const total = totalPoints(arrows);
+  const total = sumArrowPoints(arrows);
   const xCount = arrows.reduce((count, arrow) => count + Number(arrow.score === "X"), 0);
-  const tenPlusXCount = arrows.reduce((count, arrow) => count + Number(scorePoints(arrow.score) === 10), 0);
+  const tenPlusXCount = arrows.reduce((count, arrow) => count + Number(points(arrow.score) === 10), 0);
   let bestRound: BestRound | null = null;
   for (const item of rounds) {
     const expectedArrows = item.round.ends * item.round.arrowsPerEnd;
     if (expectedArrows <= 0 || item.round.arrows.length !== expectedArrows) continue;
-    const roundTotal = totalPoints(item.round.arrows);
+    const roundTotal = sumArrowPoints(item.round.arrows);
     const candidate: BestRound = {
       id: item.round.id,
       name: item.round.name,
@@ -142,7 +143,7 @@ export function calculateTrend(rounds: AnalyticsRound[]): TrendPoint[] {
       id: item.round.id,
       date: item.date,
       roundName: item.round.name,
-      average: totalPoints(item.round.arrows) / item.round.arrows.length,
+      average: sumArrowPoints(item.round.arrows) / item.round.arrows.length,
       arrowCount: item.round.arrows.length,
     }];
   }).sort((a, b) => a.date.localeCompare(b.date) || a.roundName.localeCompare(b.roundName));
@@ -153,7 +154,7 @@ export function calculateDistancePerformance(rounds: AnalyticsRound[]): Distance
   for (const item of rounds) {
     if (item.round.arrows.length === 0) continue;
     const group = groups.get(item.round.distanceMetres) ?? { total: 0, arrowCount: 0, roundIds: new Set<string>() };
-    group.total += totalPoints(item.round.arrows);
+    group.total += sumArrowPoints(item.round.arrows);
     group.arrowCount += item.round.arrows.length;
     group.roundIds.add(item.round.id);
     groups.set(item.round.distanceMetres, group);
@@ -227,21 +228,6 @@ export function calculateArrowVolume(
   return [...groups.values()].sort((a, b) => a.startDate.localeCompare(b.startDate));
 }
 
-const shortMonthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
-
-export function formatAnalyticsDate(value: string, includeYear = true) {
-  const { day, month, year } = dateParts(value);
-  const formatted = `${day} ${shortMonthNames[month - 1]}`;
-  return includeYear ? `${formatted} ${year}` : formatted;
-}
-
-export function formatAnalyticsWeekRange(startDate: string, endDate: string) {
-  const start = dateParts(startDate);
-  const end = dateParts(endDate);
-  if (start.month === end.month && start.year === end.year) return `${start.day}–${end.day} ${shortMonthNames[end.month - 1]}`;
-  return `${formatAnalyticsDate(startDate, false)}–${formatAnalyticsDate(endDate, false)}`;
-}
-
 function flattenRounds(sessions: SessionDraft[]): AnalyticsRound[] {
   return sessions.flatMap((session) => session.rounds.map((round) => ({
     sessionId: session.id,
@@ -264,11 +250,6 @@ function matchesSessionPrimaryFilters(session: Pick<SessionDraft, "sessionType" 
   return session.date >= cutoff && session.date <= today;
 }
 
-function dateParts(value: string) {
-  const [year, month, day] = value.split("-").map(Number);
-  return { year, month, day };
-}
-
 function shiftDate(value: string, days: number) {
   const date = new Date(`${value}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
@@ -281,14 +262,6 @@ function startOfWeek(value: string) {
   return shiftDate(value, -daysAfterMonday);
 }
 
-function totalPoints(arrows: ArrowEntry[]) {
-  return arrows.reduce((total, arrow) => total + scorePoints(arrow.score), 0);
-}
-
-function scorePoints(score: ArrowEntry["score"]) {
-  return score === "X" ? 10 : score === "M" ? 0 : Number(score);
-}
-
 function compareBestRound(a: BestRound, b: BestRound) {
   return a.average - b.average || a.arrowCount - b.arrowCount || a.total - b.total || a.date.localeCompare(b.date);
 }
@@ -296,8 +269,8 @@ function compareBestRound(a: BestRound, b: BestRound) {
 function comparisonMetric(rounds: AnalyticsRound[], allowSpread: boolean): ComparisonMetric {
   const arrows = rounds.flatMap((item) => item.round.arrows);
   const plotted = rounds.flatMap((item) => item.round.arrows.flatMap((arrow) => arrow.plot && (item.round.faceType !== "triple_face" || arrow.plot.faceIndex !== undefined) ? [{ x: arrow.plot.x, y: arrow.plot.y }] : []));
-  const total = totalPoints(arrows);
+  const total = sumArrowPoints(arrows);
   const xCount = arrows.filter((arrow) => arrow.score === "X").length;
-  const tenPlusXCount = arrows.filter((arrow) => scorePoints(arrow.score) === 10).length;
+  const tenPlusXCount = arrows.filter((arrow) => points(arrow.score) === 10).length;
   return { average: arrows.length ? total / arrows.length : null, xPercentage: arrows.length ? xCount / arrows.length * 100 : null, tenPlusXPercentage: arrows.length ? tenPlusXCount / arrows.length * 100 : null, arrowCount: arrows.length, spread: allowSpread ? calculateGroupingMetrics(plotted)?.spreadNormalized ?? null : null, plottedArrowCount: plotted.length };
 }

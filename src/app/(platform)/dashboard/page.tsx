@@ -4,7 +4,8 @@ import { readOwnDisplayName } from "@/features/profile/read.server";
 import { ActionLink } from "@/components/ui/action-link";
 import { Icon } from "@/components/ui/icon";
 import { readRecentTrainingSessions } from "@/features/sessions/read.server";
-import { arrowAverage, roundTotal, type ArrowEntry } from "@/features/sessions/scoring-model";
+import { formatArrowAverage, roundTotal } from "@/features/sessions/scoring-model";
+import { formatDateOnly as formatSessionDate } from "@/lib/date";
 import styles from "@/styles/pages.module.css";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -58,8 +59,3 @@ export default async function DashboardPage() {
     </>
   );
 }
-
-function formatSessionDate(value: string) {
-  return new Intl.DateTimeFormat("en-SG", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
-}
-function formatArrowAverage(arrows:ArrowEntry[]) { const average=arrowAverage(arrows); return average === null ? "—" : average.toFixed(1); }

@@ -19,7 +19,10 @@ export function AnalyticsWorkspace({ sessions, today }: { sessions: SessionDraft
   const trend = useMemo(() => calculateTrend(rounds), [rounds]);
   const distances = useMemo(() => calculateDistancePerformance(rounds), [rounds]);
   const groupings = useMemo(() => calculateTargetGroupings(rounds), [rounds]);
-  const volume = useMemo(() => calculateArrowVolume(sessions, filters, today, volumeInterval), [sessions, filters, today, volumeInterval]);
+  const volume = useMemo(
+    () => calculateArrowVolume(sessions, { sessionType: filters.sessionType, dateRange: filters.dateRange }, today, volumeInterval),
+    [sessions, filters.sessionType, filters.dateRange, today, volumeInterval],
+  );
 
   function setPrimaryFilter(update: Partial<Pick<AnalyticsFilters, "sessionType" | "dateRange">>) {
     setFilters((current) => ({ ...current, ...update, distance: "all", division: "all", targetFace: "all" }));

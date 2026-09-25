@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AnalyticsWorkspace } from "@/features/analytics/components/analytics-workspace";
 import { readAnalyticsSessions } from "@/features/analytics/read.server";
 import { requireUser } from "@/lib/auth/session.server";
+import { singaporeDate } from "@/lib/date";
 import styles from "@/styles/pages.module.css";
 
 export const metadata: Metadata = { title: "Analytics" };
@@ -18,10 +19,4 @@ export default async function AnalyticsPage() {
     </div>
     <AnalyticsWorkspace sessions={sessions} today={today}/>
   </>;
-}
-
-function singaporeDate(date: Date) {
-  const parts = new Intl.DateTimeFormat("en", { timeZone: "Asia/Singapore", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
-  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${value.year}-${value.month}-${value.day}`;
 }

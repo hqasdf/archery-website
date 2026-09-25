@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { createRoundWithEnds, createSession, deleteRound, deleteSession, updateSessionArrowCount } from "../actions";
 import { DIVISIONS, ROUND_PRESETS, TARGET_FACE_OPTIONS, type Division, type RoundPreset } from "../round-presets";
-import { arrowAverage, roundTotal, type ArrowEntry, type RoundDraft, type SessionDraft, type SessionType, type TargetFaceType } from "../scoring-model";
+import { formatArrowAverage, roundTotal, type RoundDraft, type SessionDraft, type SessionType, type TargetFaceType } from "../scoring-model";
 import { RoundPresetsPanel } from "./round-presets-panel";
 import { ScoringWorkspace } from "./scoring-workspace";
 import styles from "./sessions.module.css";
@@ -121,4 +121,3 @@ function DirectNumberField({label,value,onChange}:{label:string;value:number;onC
 }
 function defaultTarget(distanceMetres:number,division:Division,fallback:{faceDiameterCm:number;faceType:TargetFaceType}) { if (distanceMetres===70) return {faceDiameterCm:122,faceType:"full_face" as const}; if (distanceMetres===50&&division==="Compound") return {faceDiameterCm:80,faceType:"six_ring" as const}; if (distanceMetres===18) return {faceDiameterCm:40,faceType:"full_face" as const}; return fallback; }
 function SavedNotice() { return <p className={styles.prototypeNotice}>Scores and plotted arrows are saved to your Arc Track account.</p>; }
-function formatArrowAverage(arrows:ArrowEntry[]) { const average=arrowAverage(arrows); return average === null ? "—" : average.toFixed(1); }
