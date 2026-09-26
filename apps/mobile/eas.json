@@ -1,0 +1,15 @@
+{
+  "build": {
+    "development": {
+      "environment": "development",
+      "distribution": "internal"
+    },
+    "preview": {
+      "environment": "preview",
+      "distribution": "internal"
+    },
+    "production": {
+      "environment": "production"
+    }
+  }
+}

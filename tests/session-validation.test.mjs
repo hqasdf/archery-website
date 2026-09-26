@@ -21,8 +21,8 @@ test("Session Arrow count accepts non-negative whole numbers",()=>{
 });
 
 test("Round input accepts custom formats but validates storage-compatible values",()=>{
-  const valid=validateRoundInput({sessionId:id,roundNumber:1,name:" Custom  ",division:"Other",distanceMetres:23,faceDiameterCm:91,faceType:"full_face",ends:4,arrowsPerEnd:7});
-  assert.equal(valid.ok,true); assert.equal(valid.value.name,"Custom");
+  const valid=validateRoundInput({sessionId:id,name:" Custom  ",division:"Other",distanceMetres:23,faceDiameterCm:91,faceType:"full_face",ends:4,arrowsPerEnd:7});
+  assert.equal(valid.ok,true); assert.equal(valid.value.name,"Custom"); assert.equal("roundNumber" in valid.value,false);
   assert.equal(validateRoundInput({...valid.value,division:"Invalid"}).ok,false);
   assert.equal(validateRoundInput({...valid.value,faceType:"invalid"}).ok,false);
   assert.equal(validateRoundInput({...valid.value,ends:0}).ok,false);

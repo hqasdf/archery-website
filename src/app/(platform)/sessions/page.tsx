@@ -12,7 +12,6 @@ export default async function SessionsPage() {
   ]);
   return <>
     <div className={styles.intro}>
-      <p className={styles.eyebrow}>Your training journal</p>
       <h1 style={{ overflowWrap: "anywhere" }}>Your sessions, {displayName}</h1>
     </div>
     <SessionsWorkspace initialSessions={sessions}/>

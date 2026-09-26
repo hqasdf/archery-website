@@ -40,16 +40,20 @@ export async function createRoundWithEnds(input:RoundInput):Promise<Result<Round
   try {
     const supabase=await createAuthClient({writable:true});
     const value=valid.value;
-    const {data:round,error}=await supabase.from("session_rounds").insert({session_id:value.sessionId,round_number:value.roundNumber,name:value.name,division:value.division,distance_metres:value.distanceMetres,face_diameter_cm:value.faceDiameterCm,face_type:value.faceType,planned_ends:value.ends,arrows_per_end:value.arrowsPerEnd}).select("id").single();
-    if (error||!round) return failure("The Round could not be created.");
-    const ends=Array.from({length:value.ends},(_,index)=>({session_round_id:round.id,end_number:index+1}));
-    const {error:endError}=await supabase.from("session_ends").insert(ends);
-    if (endError) {
-      await supabase.from("session_rounds").delete().eq("id",round.id);
-      return failure("The Round Ends could not be created.");
-    }
+    const {data:round,error}=await supabase.rpc("create_round_with_ends",{
+      p_session_id:value.sessionId,
+      p_name:value.name,
+      p_division:value.division,
+      p_distance_metres:value.distanceMetres,
+      p_face_diameter_cm:value.faceDiameterCm,
+      p_face_type:value.faceType,
+      p_planned_ends:value.ends,
+      p_arrows_per_end:value.arrowsPerEnd,
+    }).single();
+    const createdRound=round as {round_id:string;round_number:number}|null;
+    if (error||!createdRound) return failure("The Round could not be created.");
     revalidatePath("/sessions");
-    return {ok:true,data:{id:round.id,roundNumber:value.roundNumber,name:value.name,division:value.division,distanceMetres:value.distanceMetres,faceDiameterCm:value.faceDiameterCm,faceType:value.faceType,ends:value.ends,arrowsPerEnd:value.arrowsPerEnd,arrows:[]}};
+    return {ok:true,data:{id:createdRound.round_id,roundNumber:createdRound.round_number,name:value.name,division:value.division,distanceMetres:value.distanceMetres,faceDiameterCm:value.faceDiameterCm,faceType:value.faceType,ends:value.ends,arrowsPerEnd:value.arrowsPerEnd,arrows:[]}};
   } catch { return failure("Round saving is temporarily unavailable."); }
 }
 

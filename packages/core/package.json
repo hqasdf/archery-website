@@ -1,0 +1,18 @@
+{
+  "name": "@arc-track/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./scoring": "./src/scoring-model.ts",
+    "./presets": "./src/round-presets.ts",
+    "./insights": "./src/session-insights-model.ts",
+    "./dates": "./src/date.ts",
+    "./analytics": "./src/analytics-model.ts"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}

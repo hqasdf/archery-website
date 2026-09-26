@@ -8,7 +8,7 @@ const SESSION_TYPES:SessionType[]=["training","competition"];
 
 export type SessionInput={title:string;date:string;sessionType:string};
 export type SessionArrowCountInput={sessionId:string;arrowCount:number};
-export type RoundInput={sessionId:string;roundNumber:number;name:string;division:string;distanceMetres:number;faceDiameterCm:number;faceType:string;ends:number;arrowsPerEnd:number};
+export type RoundInput={sessionId:string;name:string;division:string;distanceMetres:number;faceDiameterCm:number;faceType:string;ends:number;arrowsPerEnd:number};
 export type ArrowInput={roundId:string;endNumber:number;arrowNumber:number;score:string;plot:Plot|null};
 
 export function validateSessionInput(input:SessionInput) {
@@ -31,7 +31,7 @@ export function validateRoundInput(input:RoundInput) {
   if (!name||Array.from(name).length>80) return {ok:false as const,message:"Round names must contain 1 to 80 characters."};
   if (!DIVISIONS.includes(input.division as (typeof DIVISIONS)[number])) return {ok:false as const,message:"Choose a valid division."};
   if (!FACE_TYPES.includes(input.faceType as TargetFaceType)) return {ok:false as const,message:"Choose a valid target-face layout."};
-  const numbers=[input.roundNumber,input.distanceMetres,input.faceDiameterCm,input.ends,input.arrowsPerEnd];
+  const numbers=[input.distanceMetres,input.faceDiameterCm,input.ends,input.arrowsPerEnd];
   if (numbers.some((value)=>!Number.isInteger(value)||value<1||value>32767)) return {ok:false as const,message:""};
   return {ok:true as const,value:{...input,name,division:input.division as (typeof DIVISIONS)[number],faceType:input.faceType as TargetFaceType}};
 }

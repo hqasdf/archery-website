@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Arc Track",
+    "slug": "arc-track",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "arctrack",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": true },
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": true }
+  }
+}
